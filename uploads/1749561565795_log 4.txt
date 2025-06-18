@@ -1,0 +1,6 @@
+[05:02:28.259|ECCB|1] [0x02000000]    1, 2[→]   PDCP     1,    1 [0xdb10:          UNKNOWN:T:0x0000:E:0:TH04]               II 187 msgSTDPdcpDataTransfer
+[05:02:28.260|ECCB|1] [0x02000000]    1, 2[→]   GTP      1,    1 [0xdb11:       e030244e:T:T:0x0000:E:0:TH04]               II 188 msgSTDgtpTunnelSetup
+[05:02:28.261|ECCB|1] [0x02000000]    1, 2[→]   MAC      1,    1 [0xdb12:       e030244e:T:T:0x0000:E:0:TH04]               II 189 msgSTDmacRandomAccess
+[05:02:28.262|ECCB|1] [0x02000000]    1, 2[→]   RLC      1,    1 [0xdb13:       e030244e:T:T:0x0000:E:0:TH04]               II 190 msgSTDrlcDataRequest
+[05:02:28.263|ECCB|1] [0x02000000]    1, 2[→]   T-ENB    1,    1 [0xdb14:       e030244e:T:T:0x0000:E:0:TH04]               II 191 msgSTDtenbX2Setup
+[05:02:28.264|ECCB|1] [0x02000000]    1, 2[→]   GNB      1,    1 [0xdb15:       e030244e:T:T:0x0000:E:0:TH04]               II 192 msgSTDgnbNgSetup

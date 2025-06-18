@@ -1,0 +1,11 @@
+[05:02:28.259|ECCB|1] [0x02000000]    1, 2[<=]   RRC     1,    1 [0xdb10:          UNKNOWN:T:0x0000:E:0:TH04]               II 187 msgSTDRrcRRCConnectionRequestUeEccb
+
+[05:02:28.260|ECCB|1] [0x02000000]    1, 2[=>]   RRC     1,    1 [0xdb11:       e030244e:T:T:0x0000:E:0:TH04]               II 188 msgSTDRrcRRCConnectionSetupEccbUe
+
+ 
+
+ 
+
+187_Rx_STDRrcRRCConnectionRequestUeEccb
+
+   188_Rx_STDRrcRRCConnectionSetupEccbUe

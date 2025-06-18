@@ -1,0 +1,17 @@
+[05:02:28.259|ECCB|1] [0x02000000]    1, 2[<=]   RRC     1,    1 [0xdb10:          UNKNOWN:T:0x0000:E:0:TH04]               II 187 msgSTDRrcRRCConnectionRequestUeEccb
+[05:02:28.260|ECCB|1] [0x02000000]    1, 2[=>]   RRC     1,    1 [0xdb11:       e030244e:T:T:0x0000:E:0:TH04]               II 188 msgSTDRrcRRCConnectionSetupEccbUe
+
+[05:02:28.261|ECCB|1] [0x02000000]    DEBUG: Entering RRC connection setup handler for UE-001, cell CELL-A123
+[05:02:28.262|ECCB|1] [0x02000000]    DEBUG: Allocated RNTI 0x1234 for UE-001
+[05:02:28.263|ECCB|1] [0x02000000]    DEBUG: Sending RRC Connection Setup Complete to UE-001
+
+[05:02:28.265|ECCB|1] [0x02000000]    1, 2[<=]   S1AP    1,    1 [0xdb12:          UNKNOWN:T:0x0000:E:0:TH04]               II 189 msgSTDS1apInitialUeMessage
+[05:02:28.266|ECCB|1] [0x02000000]    1, 2[=>]   S1AP    1,    1 [0xdb13:       e030244e:T:T:0x0000:E:0:TH04]               II 190 msgSTDS1apUplinkNasTransport
+
+[05:02:28.267|ECCB|1] [0x02000000]    DEBUG: S1AP Initial UE Message processed for IMSI 001010123456789
+[05:02:28.268|ECCB|1] [0x02000000]    DEBUG: NAS transport message sent to MME
+
+187_Rx_STDRrcRRCConnectionRequestUeEccb
+188_Rx_STDRrcRRCConnectionSetupEccbUe
+189_Rx_STDS1apInitialUeMessage
+190_Rx_STDS1apUplinkNasTransport
