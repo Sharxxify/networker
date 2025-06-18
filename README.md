@@ -1,3 +1,6 @@
+
+# SRM_25NCOAM03SRM_MsgFlow_Generation_Tool_for_4G_Debugging
+SRIB-PRISM Program
 # 4G Log Analyzer - Desktop Application
 
 A desktop application for analyzing 4G network logs, built with Next.js and Electron.
@@ -10,6 +13,12 @@ A desktop application for analyzing 4G network logs, built with Next.js and Elec
 - 🖥️ Native desktop application experience
 - 📈 Real-time data visualization
 - 🔍 Powerful filtering and search capabilities
+
+# 📦 Run via Docker (no setup needed!)
+
+```bash
+docker pull deepta505/4g-log-analyzer
+docker run --rm -v "${PWD}/out:/app/dist" deepta505/4g-log-analyzer
 
 ## Development Setup
 
@@ -150,3 +159,6 @@ Creates an AppImage in `dist/`
 ## License
 
 This project is licensed under the MIT License. 
+# SRM_25NCOAM03SRM_MsgFlow_Generation_Tool_for_4G_Debugging
+SRIB-PRISM Program
+
