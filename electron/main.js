@@ -32,28 +32,24 @@ function saveWindowState() {
 function createWindow() {
   loadWindowState();
   mainWindow = new BrowserWindow({
-    width: windowState.width || 1200,
-    height: windowState.height || 800,
-    x: windowState.x,
-    y: windowState.y,
-    minWidth: 800,
-    minHeight: 600,
+    width: 1200,
+    height: 800,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      enableRemoteModule: false,
-      preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, '../public/icon.png'),
     titleBarStyle: 'default',
     show: false
   });
 
-  const startUrl = isDev 
-    ? 'http://localhost:3000' 
-    : `file://${path.join(__dirname, '../out/index.html')}`;
-  
-  mainWindow.loadURL(startUrl);
+  // Load the upload logs page by default
+  mainWindow.loadURL(
+    isDev
+      ? 'http://localhost:3000/upload'
+      : `file://${path.join(__dirname, '../out/upload/index.html')}`
+  );
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
