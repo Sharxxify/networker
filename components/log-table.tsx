@@ -149,6 +149,8 @@ export function LogTable({ filters }: LogTableProps) {
   const [errors, setErrors] = useState<string[]>([])
   const { toast } = useToast()
   const router = useRouter()
+  const [jumpPage, setJumpPage] = useState("")
+  const [editingPage, setEditingPage] = useState(false)
 
   // Apply filters to data
   const filteredData = useMemo(() => {
@@ -376,7 +378,48 @@ export function LogTable({ filters }: LogTableProps) {
             Previous
           </Button>
           <div className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of {Math.max(1, table.getPageCount())}
+            Page {" "}
+            {editingPage ? (
+              <input
+                type="number"
+                min={1}
+                max={table.getPageCount()}
+                autoFocus
+                value={jumpPage}
+                onChange={e => setJumpPage(e.target.value.replace(/[^0-9]/g, ""))}
+                onBlur={() => {
+                  const page = Math.max(1, Math.min(table.getPageCount(), Number(jumpPage)))
+                  if (jumpPage && Number(jumpPage) !== table.getState().pagination.pageIndex + 1 && Number(jumpPage) >= 1 && Number(jumpPage) <= table.getPageCount()) {
+                    table.setPageIndex(page - 1)
+                  }
+                  setEditingPage(false)
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    const page = Math.max(1, Math.min(table.getPageCount(), Number(jumpPage)))
+                    if (jumpPage && Number(jumpPage) !== table.getState().pagination.pageIndex + 1 && Number(jumpPage) >= 1 && Number(jumpPage) <= table.getPageCount()) {
+                      table.setPageIndex(page - 1)
+                    }
+                    setEditingPage(false)
+                  } else if (e.key === "Escape") {
+                    setEditingPage(false)
+                  }
+                }}
+                className="w-14 px-2 py-1 border rounded text-center text-sm mx-1"
+              />
+            ) : (
+              <span
+                className="cursor-pointer underline mx-1"
+                onClick={() => {
+                  setEditingPage(true)
+                  setJumpPage((table.getState().pagination.pageIndex + 1).toString())
+                }}
+                title="Click to jump to page"
+              >
+                {table.getState().pagination.pageIndex + 1}
+              </span>
+            )}
+            {" "}of {Math.max(1, table.getPageCount())}
           </div>
           <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
             Next
