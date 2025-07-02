@@ -1,12 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { ArrowRight, ChevronUp, RefreshCw } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { ArrowRight, ChevronUp, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter, useSearchParams } from "next/navigation"
+import * as htmlToImage from "html-to-image"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Message {
   id: string
@@ -40,6 +42,11 @@ export function MessageFlow({ filters }: MessageFlowProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const selectedLogId = searchParams.get("selectedLog")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+  const [editingPage, setEditingPage] = useState(false)
+  const [jumpPage, setJumpPage] = useState("")
+  const diagramRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadMessageFlow()
@@ -74,10 +81,10 @@ export function MessageFlow({ filters }: MessageFlowProps) {
       // Apply filters if provided
       let filteredEntries = entries;
       if (filters) {
-        if (filters.callId) {
+        if (filters.callId && filters.callId !== "all") {
           filteredEntries = filteredEntries.filter((e: any) => e.callId === filters.callId);
         }
-        if (filters.cellId) {
+        if (filters.cellId && filters.cellId !== "all") {
           filteredEntries = filteredEntries.filter((e: any) => e.cellId === filters.cellId);
         }
         if (filters.messageType) {
@@ -143,7 +150,6 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             cellId: entry.cellId,
           }
         })
-        .slice(0, 15) // Limit to first 15 messages for better visualization
 
       console.log("Flow messages:", flowMessages) // Debug log
 
@@ -195,6 +201,22 @@ export function MessageFlow({ filters }: MessageFlowProps) {
 
   console.log('Current highlightedMessage:', highlightedMessage);
 
+  // Pagination logic
+  const totalPages = Math.ceil(messages.length / pageSize)
+  const paginatedMessages = messages.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const startIdx = messages.length === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const endIdx = Math.min(currentPage * pageSize, messages.length)
+
+  const exportImage = async () => {
+    if (diagramRef.current) {
+      const dataUrl = await htmlToImage.toPng(diagramRef.current)
+      const link = document.createElement("a")
+      link.download = "message-flow.png"
+      link.href = dataUrl
+      link.click()
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -237,14 +259,14 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportImage}>
             Export
           </Button>
         </div>
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[800px]">
+        <div className="min-w-[800px]" ref={diagramRef}>
           {/* Entity Headers */}
           <div className="flex justify-between mb-4">
             {entities.map((entity) => (
@@ -267,7 +289,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             {/* Messages */}
             <div className="space-y-8 py-4 relative">
               <TooltipProvider>
-                {messages.map((msg: Message, msgIndex: number) => {
+                {paginatedMessages.map((msg: Message, msgIndex: number) => {
                   const fromIdx = entities.indexOf(msg.from)
                   const toIdx = entities.indexOf(msg.to)
 
@@ -443,6 +465,101 @@ export function MessageFlow({ filters }: MessageFlowProps) {
           </div>
         </div>
       </div>
+      {/* Pagination Controls - match parsed logs style */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-muted-foreground">
+            {messages.length > 0 ? (
+              <>
+                Showing {startIdx} to {endIdx} of {messages.length} entries
+              </>
+            ) : (
+              "No entries to display"
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Select
+              value={pageSize.toString()}
+              onValueChange={value => {
+                setPageSize(Number(value))
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="w-[90px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 / page</SelectItem>
+                <SelectItem value="20">20 / page</SelectItem>
+                <SelectItem value="50">50 / page</SelectItem>
+                <SelectItem value="100">100 / page</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <div className="text-sm">
+              Page {" "}
+              {editingPage ? (
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  autoFocus
+                  value={jumpPage}
+                  onChange={e => setJumpPage(e.target.value.replace(/[^0-9]/g, ""))}
+                  onBlur={() => {
+                    const page = Math.max(1, Math.min(totalPages, Number(jumpPage)))
+                    if (jumpPage && Number(jumpPage) !== currentPage && Number(jumpPage) >= 1 && Number(jumpPage) <= totalPages) {
+                      setCurrentPage(page)
+                    }
+                    setEditingPage(false)
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") {
+                      const page = Math.max(1, Math.min(totalPages, Number(jumpPage)))
+                      if (jumpPage && Number(jumpPage) !== currentPage && Number(jumpPage) >= 1 && Number(jumpPage) <= totalPages) {
+                        setCurrentPage(page)
+                      }
+                      setEditingPage(false)
+                    } else if (e.key === "Escape") {
+                      setEditingPage(false)
+                    }
+                  }}
+                  className="w-14 px-2 py-1 border rounded text-center text-sm mx-1"
+                />
+              ) : (
+                <span
+                  className="cursor-pointer underline mx-1"
+                  onClick={() => {
+                    setEditingPage(true)
+                    setJumpPage(currentPage.toString())
+                  }}
+                  title="Click to jump to page"
+                >
+                  {currentPage}
+                </span>
+              )}
+              {" "}of {Math.max(1, totalPages)}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
