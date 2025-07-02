@@ -98,22 +98,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
       console.log("Raw entries:", entries) // Debug log
       console.log("Filtered entries:", filteredEntries) // Debug log
 
-      // Always use the five main entities as columns
-      const fixedEntities = ["UE", "RRC", "eNB", "S1AP", "Network"];
-
-      // Helper to map any entity to the closest main entity
-      const mapToMainEntity = (entity: string) => {
-        if (!entity) return "Network";
-        const normalized = entity.trim().toUpperCase();
-        if (normalized.includes("UE")) return "UE";
-        if (normalized.includes("RRC")) return "RRC";
-        if (normalized.includes("ENB")) return "eNB";
-        if (normalized.includes("S1AP")) return "S1AP";
-        if (normalized.includes("NETWORK")) return "Network";
-        return "Network";
-      };
-
-      // Convert log entries to message flow format, mapping from/to to main entities
+      // Convert log entries to message flow format, using raw entity names
       const flowMessages = filteredEntries
         .filter((entry: any) => entry.direction && entry.msgType)
         .map((entry: any, index: number) => {
@@ -144,9 +129,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             to = "Network"
           }
 
-          // Map to main entities
-          from = mapToMainEntity(from);
-          to = mapToMainEntity(to);
+          // Do not map to main entities, use raw names
 
           return {
             id: entry.lineNumber,
@@ -164,46 +147,22 @@ export function MessageFlow({ filters }: MessageFlowProps) {
 
       console.log("Flow messages:", flowMessages) // Debug log
 
-      // Extract unique entities and order them logically
-      const allEntities = new Set<string>()
+      // Extract unique entities from the log data in order of first appearance
+      const dynamicEntities: string[] = [];
       flowMessages.forEach((msg: any) => {
-        allEntities.add(msg.from)
-        allEntities.add(msg.to)
-      })
-
-      // Order entities in typical 4G flow
-      const orderedEntities = [
-        "UE",
-        "RRC",
-        "MAC",
-        "PDCP",
-        "eNB",
-        "S1AP",
-        "MME",
-        "HSS",
-        "SGW",
-        "PGW",
-        "Network",
-      ].filter((e) => allEntities.has(e))
-
-      // Add any remaining entities
-      Array.from(allEntities).forEach((entity) => {
-        if (!orderedEntities.includes(entity)) {
-          orderedEntities.push(entity)
-        }
-      })
-
-      console.log("Entities:", orderedEntities) // Debug log
+        if (!dynamicEntities.includes(msg.from)) dynamicEntities.push(msg.from);
+        if (!dynamicEntities.includes(msg.to)) dynamicEntities.push(msg.to);
+      });
 
       setMessages(flowMessages)
-      setEntities(fixedEntities)
+      setEntities(dynamicEntities)
 
       console.log('All message flow IDs:', flowMessages.map((m: any) => m.id));
 
       if (flowMessages.length > 0) {
         toast({
           title: "Message flow loaded",
-          description: `Displaying ${flowMessages.length} messages across ${orderedEntities.length} entities.`,
+          description: `Displaying ${flowMessages.length} messages across ${dynamicEntities.length} entities.`,
         })
       }
     } catch (error) {
