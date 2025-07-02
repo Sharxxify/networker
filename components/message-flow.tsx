@@ -98,7 +98,22 @@ export function MessageFlow({ filters }: MessageFlowProps) {
       console.log("Raw entries:", entries) // Debug log
       console.log("Filtered entries:", filteredEntries) // Debug log
 
-      // Convert log entries to message flow format
+      // Always use the five main entities as columns
+      const fixedEntities = ["UE", "RRC", "eNB", "S1AP", "Network"];
+
+      // Helper to map any entity to the closest main entity
+      const mapToMainEntity = (entity: string) => {
+        if (!entity) return "Network";
+        const normalized = entity.trim().toUpperCase();
+        if (normalized.includes("UE")) return "UE";
+        if (normalized.includes("RRC")) return "RRC";
+        if (normalized.includes("ENB")) return "eNB";
+        if (normalized.includes("S1AP")) return "S1AP";
+        if (normalized.includes("NETWORK")) return "Network";
+        return "Network";
+      };
+
+      // Convert log entries to message flow format, mapping from/to to main entities
       const flowMessages = filteredEntries
         .filter((entry: any) => entry.direction && entry.msgType)
         .map((entry: any, index: number) => {
@@ -129,6 +144,10 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             to = "Network"
           }
 
+          // Map to main entities
+          from = mapToMainEntity(from);
+          to = mapToMainEntity(to);
+
           return {
             id: entry.lineNumber,
             from,
@@ -147,7 +166,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
 
       // Extract unique entities and order them logically
       const allEntities = new Set<string>()
-      flowMessages.forEach((msg) => {
+      flowMessages.forEach((msg: any) => {
         allEntities.add(msg.from)
         allEntities.add(msg.to)
       })
@@ -177,9 +196,9 @@ export function MessageFlow({ filters }: MessageFlowProps) {
       console.log("Entities:", orderedEntities) // Debug log
 
       setMessages(flowMessages)
-      setEntities(orderedEntities)
+      setEntities(fixedEntities)
 
-      console.log('All message flow IDs:', flowMessages.map(m => m.id));
+      console.log('All message flow IDs:', flowMessages.map((m: any) => m.id));
 
       if (flowMessages.length > 0) {
         toast({
@@ -290,57 +309,93 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             <div className="space-y-8 py-4 relative">
               <TooltipProvider>
                 {messages.map((msg: Message, msgIndex: number) => {
-                  const fromIndex = entities.indexOf(msg.from)
-                  const toIndex = entities.indexOf(msg.to)
+                  const fromIdx = entities.indexOf(msg.from)
+                  const toIdx = entities.indexOf(msg.to)
 
-                  if (fromIndex === -1 || toIndex === -1) {
+                  if (fromIdx === -1 || toIdx === -1) {
                     console.log(`Skipping message: ${msg.message}, from: ${msg.from}, to: ${msg.to}`)
                     return null
                   }
 
-                  const isLeftToRight = fromIndex < toIndex
-                  const startPercent = (Math.min(fromIndex, toIndex) / (entities.length - 1)) * 100
-                  const endPercent = (Math.max(fromIndex, toIndex) / (entities.length - 1)) * 100
-                  const width = endPercent - startPercent
+                  const isLeftToRight = fromIdx < toIdx
                   const isHighlighted = String(highlightedMessage) === String(msg.id)
                   const isFaded = highlightedMessage && !isHighlighted
-                  console.log('Highlight check:', highlightedMessage, msg.id, isHighlighted);
+
+                  // Calculate left positions for from and to entities (in %)
+                  const fromCenter = ((fromIdx + 0.5) / entities.length) * 100
+                  const toCenter = ((toIdx + 0.5) / entities.length) * 100
+                  
+                  const top = 16 // vertical offset for the arrow row
 
                   return (
-                    <div
-                      key={msg.id}
-                      className="relative h-8"
-                      style={{
-                        marginBottom: selectedMessage === msg.id ? "100px" : "16px",
-                        zIndex: selectedMessage === msg.id ? 10 : 1,
-                      }}
-                    >
-                      {/* Message Arrow */}
+                    <div key={`${msg.id}-${msgIndex}`} className="relative h-8 w-full" style={{ marginBottom: selectedMessage === msg.id ? "100px" : "16px", zIndex: selectedMessage === msg.id ? 10 : 1 }}>
+                      {/* Message Arrow (SVG for pixel-perfect alignment) */}
+                      <svg
+                        className="absolute left-0 top-0"
+                        style={{ width: '100%', height: '32px', pointerEvents: 'none' }}
+                        width="100%" height="32"
+                      >
+                        <line
+                          x1={`${fromCenter}%`} y1={top}
+                          x2={`${toCenter}%`} y2={top}
+                          stroke={
+                            msg.status === "success"
+                              ? "#22c55e"
+                              : msg.status === "warning"
+                                ? "#eab308"
+                                : msg.status === "error"
+                                  ? "#ef4444"
+                                  : "#3b82f6"
+                          }
+                          strokeWidth="3"
+                          opacity={isFaded ? 0.3 : 1}
+                        />
+                        <defs>
+                          <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+                            <polygon points="0 0, 8 4, 0 8" fill={
+                              msg.status === "success"
+                                ? "#22c55e"
+                                : msg.status === "warning"
+                                  ? "#eab308"
+                                  : msg.status === "error"
+                                    ? "#ef4444"
+                                    : "#3b82f6"
+                            } />
+                          </marker>
+                        </defs>
+                      </svg>
+
+                      {/* Message Label (centered between from and to columns) */}
                       <div
-                        className="absolute flex items-center"
+                        className={`absolute text-xs font-medium transition-opacity duration-200 ${isFaded ? "opacity-30" : ""} ${isHighlighted ? "opacity-100" : ""}`}
                         style={{
-                          left: `${startPercent}%`,
-                          width: `${width}%`,
-                          height: "32px",
+                          left: `${(fromCenter + toCenter) / 2}%`,
+                          transform: "translateX(-50%) translateY(-20px)",
+                          maxWidth: "200px",
+                          textAlign: "center",
                         }}
                       >
-                        <div
-                          className={`h-0.5 flex-1 transition-opacity duration-200 ${
-                            msg.status === "success"
-                              ? "bg-green-500"
-                              : msg.status === "warning"
-                                ? "bg-yellow-500"
-                                : msg.status === "error"
-                                  ? "bg-red-500"
-                                  : "bg-blue-500"
-                          } ${isFaded ? "opacity-30" : ""} ${isHighlighted ? "opacity-100" : ""}`}
-                        />
+                        <div className="truncate bg-background px-2 py-1 rounded border" title={msg.message}>
+                          {msg.message}
+                        </div>
+                      </div>
+
+                      {/* Arrowhead Button (interactive, at the end) */}
+                      <div
+                        className="absolute"
+                        style={{
+                          left: `${toCenter}%`,
+                          top: `${top - 12}px`,
+                          transform: "translateX(-50%)",
+                          zIndex: 2,
+                        }}
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className={`h-6 w-6 rounded-full ml-1 transition-all duration-200 ${
+                              className={`h-6 w-6 rounded-full transition-all duration-200 ${
                                 msg.status === "success"
                                   ? "bg-green-500 hover:bg-green-600"
                                   : msg.status === "warning"
@@ -368,28 +423,13 @@ export function MessageFlow({ filters }: MessageFlowProps) {
                         </Tooltip>
                       </div>
 
-                      {/* Message Label */}
-                      <div
-                        className={`absolute text-xs font-medium transition-opacity duration-200 ${isFaded ? "opacity-30" : ""} ${isHighlighted ? "opacity-100" : ""}`}
-                        style={{
-                          left: `${startPercent + width / 2}%`,
-                          transform: "translateX(-50%) translateY(-20px)",
-                          maxWidth: "200px",
-                          textAlign: "center",
-                        }}
-                      >
-                        <div className="truncate bg-background px-2 py-1 rounded border" title={msg.message}>
-                          {msg.message}
-                        </div>
-                      </div>
-
                       {/* Expanded Message Details */}
                       {selectedMessage === msg.id && (
                         <div
                           className="absolute bg-card border rounded-md p-4 shadow-lg z-20 w-80"
                           style={{
                             top: "40px",
-                            left: `${startPercent + width / 2}%`,
+                            left: `${(fromCenter + toCenter) / 2}%`,
                             transform: "translateX(-50%)",
                           }}
                         >
