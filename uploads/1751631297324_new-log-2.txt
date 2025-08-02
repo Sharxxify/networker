@@ -1,9 +1,0 @@
-[05:02:28.261|ECCB|1] [0x02000001]    1, 3[<=]   RRC     1,    2 [0xdb12:          UNKNOWN:T:0x0000:E:0:TH05]               II 189 msgSTDRrcRRCConnectionReestablishmentRequestUeEccb
-
-[05:02:28.262|ECCB|1] [0x02000001]    1, 3[=>]   RRC     1,    2 [0xdb13:       e030244f:T:T:0x0000:E:0:TH05]               II 190 msgSTDRrcRRCConnectionReestablishmentEccbUe
-
-[05:02:28.263|ECCB|1] [0x02000002]    1, 4[<=]   RRC     1,    3 [0xdb14:          UNKNOWN:T:0x0000:E:0:TH06]               II 191 msgSTDRrcRRCConnectionRejectUeEccb
-
-[05:02:28.264|ECCB|1] [0x02000002]    1, 4[=>]   RRC     1,    3 [0xdb15:       e0302450:T:T:0x0000:E:0:TH06]               II 192 msgSTDRrcRRCConnectionRejectEccbUe
-
-[05:02:28.265|ECCB|1] [0x02000003]    1, 5[<=]   RRC     1,    4 [0xdb16:          UNKNOWN:T:0x0000:E:0:TH07]               II 193 msgSTDRrcRRCConnectionReleaseUeEccb

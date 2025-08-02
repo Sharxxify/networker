@@ -1,0 +1,24 @@
+Message ID: 188
+Type: RRC Connection Setup
+Direction: ECCB → UE
+Timestamp: 05:02:28.260
+
+Raw Log Entry:
+[05:02:28.260|ECCB|1] [0x02000000]    1, 2[=>]   RRC     1,    1 [0xdb11:       e030244e:T:T:0x0000:E:0:TH04]               II 188 msgSTDRrcRRCConnectionSetupEccbUe
+
+Message Content:
+This is a RRC Connection Setup message sent from ECCB to UE.
+The message contains connection setup parameters and configuration details.
+
+Protocol Details:
+- Protocol: RRC (Radio Resource Control)
+- Message Type: Connection Setup
+- Direction: ECCB to UE
+- Status: Transmitted
+
+Technical Parameters:
+- Call ID: 1
+- Cell ID: 1
+- Hex Data: 0x02000000
+- Thread: TH04
+- Setup Parameters: e030244e 

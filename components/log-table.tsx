@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, Search, RefreshCw, AlertTriangle } from "luc
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useRouter } from "next/navigation"
+import { MessageDetailsPanel } from "@/components/message-details-panel"
 
 interface LogEntry {
   id: string
@@ -31,6 +32,7 @@ interface LogEntry {
   protocol?: string
   lineNumber: number
   rawLine: string
+  messageNumber?: string
 }
 
 interface LogTableProps {
@@ -41,6 +43,7 @@ interface LogTableProps {
     messageType?: string
     status?: string
   }
+  selectedLog?: string | null
 }
 
 const columns: ColumnDef<LogEntry>[] = [
@@ -142,7 +145,7 @@ const columns: ColumnDef<LogEntry>[] = [
   },
 ]
 
-export function LogTable({ filters }: LogTableProps) {
+export function LogTable({ filters, selectedLog }: LogTableProps) {
   const [data, setData] = useState<LogEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [globalFilter, setGlobalFilter] = useState("")
@@ -151,6 +154,11 @@ export function LogTable({ filters }: LogTableProps) {
   const router = useRouter()
   const [jumpPage, setJumpPage] = useState("")
   const [editingPage, setEditingPage] = useState(false)
+  
+  // Side panel state
+  const [isMessagePanelOpen, setIsMessagePanelOpen] = useState(false)
+  const [selectedMessageNumber, setSelectedMessageNumber] = useState<string | null>(null)
+  const [selectedLogEntry, setSelectedLogEntry] = useState<LogEntry | null>(null)
 
   // Apply filters to data
   const filteredData = useMemo(() => {
@@ -243,13 +251,35 @@ export function LogTable({ filters }: LogTableProps) {
     }
   }
 
-  const handleLogClick = (logId: string) => {
-    router.push(`/message-flow?selectedLog=${logId}`)
+  const handleLogClick = (logEntry: LogEntry) => {
+    if (logEntry.messageNumber) {
+      setSelectedMessageNumber(logEntry.messageNumber)
+      setSelectedLogEntry(logEntry)
+      setIsMessagePanelOpen(true)
+    } else {
+      // Fallback to message flow if no message number
+      router.push(`/message-flow?selectedLog=${logEntry.lineNumber}`)
+    }
   }
 
   useEffect(() => {
     loadLogEntries()
   }, [])
+
+  // Scroll to selected log when component mounts or selectedLog changes
+  useEffect(() => {
+    if (selectedLog && data.length > 0) {
+      // Find the selected log entry
+      const selectedEntry = data.find(entry => entry.lineNumber.toString() === selectedLog)
+      if (selectedEntry) {
+        // Highlight the selected entry by adding a CSS class or scroll to it
+        const element = document.querySelector(`[data-line-number="${selectedEntry.lineNumber}"]`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }
+    }
+  }, [selectedLog, data])
 
   return (
     <div className="space-y-4">
@@ -289,6 +319,11 @@ export function LogTable({ filters }: LogTableProps) {
         <div className="text-sm text-muted-foreground">
           {filteredData.length} of {data.length} entries
           {filters && Object.values(filters).some((v) => v) && " (filtered)"}
+          {selectedLog && (
+            <span className="ml-2 text-blue-600 font-medium">
+              • Selected log: {selectedLog}
+            </span>
+          )}
         </div>
       </div>
 
@@ -322,8 +357,13 @@ export function LogTable({ filters }: LogTableProps) {
                 <TableRow 
                   key={row.id} 
                   data-state={row.getIsSelected() && "selected"} 
-                  className="hover:bg-muted/50"
-                  onClick={() => handleLogClick(row.original.lineNumber.toString())}
+                  data-line-number={row.original.lineNumber}
+                  className={`hover:bg-muted/50 ${
+                    selectedLog && row.original.lineNumber.toString() === selectedLog 
+                      ? "bg-blue-50 border-l-4 border-l-blue-500" 
+                      : ""
+                  }`}
+                  onClick={() => handleLogClick(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
@@ -427,6 +467,18 @@ export function LogTable({ filters }: LogTableProps) {
           </Button>
         </div>
       </div>
+      
+      {/* Message Details Side Panel */}
+      <MessageDetailsPanel
+        isOpen={isMessagePanelOpen}
+        onClose={() => {
+          setIsMessagePanelOpen(false)
+          setSelectedMessageNumber(null)
+          setSelectedLogEntry(null)
+        }}
+        messageNumber={selectedMessageNumber}
+        logEntry={selectedLogEntry}
+      />
     </div>
   )
 }

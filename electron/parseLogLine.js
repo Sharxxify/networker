@@ -98,21 +98,66 @@ function parseLogLine(line, lineNumber) {
         messageName,
       ] = mainMatch;
       lastProtocol = protocol; // update for chain
+      // Map protocol names to the correct entity names based on specifications
+      const mapProtocolToEntity = (protocol) => {
+        const upperProtocol = protocol.toUpperCase();
+        switch (upperProtocol) {
+          case "RRC":
+            return "UE";
+          case "S1AP":
+            return "S1AP";
+          case "X2AP":
+            return "X2AP";
+          case "PDCP":
+            return "PDCP";
+          case "GTP":
+            return "GTPB";
+          case "RLC":
+            return "RLCB";
+          case "MAC":
+            return "MACB";
+          default:
+            return protocol; // Keep original if no mapping
+        }
+      };
+      
+      const mappedProtocol = mapProtocolToEntity(protocol);
+      
+      // Handle direction with ECCB as central entity
+      let directionStr;
+      if (direction.includes("<=")) {
+        // <= means message coming TO ECCB
+        directionStr = `${mappedProtocol} → ECCB`;
+      } else if (direction.includes("=>")) {
+        // => means message going FROM ECCB
+        directionStr = `ECCB → ${mappedProtocol}`;
+      } else {
+        directionStr = direction.trim();
+      }
+      
+      // Extract message number from the message name (e.g., "187" from "msgSTDRrcRRCConnectionRequestUeEccb")
+      let messageNumber = null;
+      const messageNumberMatch = messageName.match(/\b(\d+)\b/);
+      if (messageNumberMatch) {
+        messageNumber = messageNumberMatch[1];
+      }
+      
       return {
         entry: {
           id: `${lineNumber}-${messageId}`,
           timestamp: timestamp,
           callId: `CALL-${callId}`,
           cellId: `CELL-${cellId}`,
-          msgType: protocol,
-          direction: direction.includes("<=") ? "UE → eNB" : direction.includes("=>") ? "eNB → UE" : direction.trim(),
+          msgType: mappedProtocol,
+          direction: directionStr,
           status: determineStatus(messageName, additionalData),
           message: cleanMessageName(messageName),
           rawLine: trimmedLine,
           lineNumber,
           messageId,
-          protocol,
+          protocol: mappedProtocol,
           hexData: hexValue,
+          messageNumber: messageNumber,
         },
         error: null,
       };
@@ -120,13 +165,50 @@ function parseLogLine(line, lineNumber) {
     const simpleMatch = trimmedLine.match(LOG_PATTERNS.simpleLog);
     if (simpleMatch) {
       const [, messageId, direction, messageName] = simpleMatch;
-      lastProtocol = extractProtocolFromMessage(messageName);
+      const extractedProtocol = extractProtocolFromMessage(messageName);
+      
+      // Map protocol names to the correct entity names based on specifications
+      const mapProtocolToEntity = (protocol) => {
+        const upperProtocol = protocol.toUpperCase();
+        switch (upperProtocol) {
+          case "RRC":
+            return "UE";
+          case "S1AP":
+            return "S1AP";
+          case "X2AP":
+            return "X2AP";
+          case "PDCP":
+            return "PDCP";
+          case "GTP":
+            return "GTPB";
+          case "RLC":
+            return "RLCB";
+          case "MAC":
+            return "MACB";
+          default:
+            return protocol; // Keep original if no mapping
+        }
+      };
+      
+      const mappedProtocol = mapProtocolToEntity(extractedProtocol);
+      lastProtocol = mappedProtocol;
+      
+      // Handle direction with ECCB as central entity
+      let directionStr;
+      if (direction === "Rx") {
+        // Rx means message received by ECCB
+        directionStr = `${mappedProtocol} → ECCB`;
+      } else {
+        // Tx means message transmitted by ECCB
+        directionStr = `ECCB → ${mappedProtocol}`;
+      }
+      
       return {
         entry: {
           id: `${lineNumber}-${messageId}`,
           timestamp: "",
-          msgType: extractProtocolFromMessage(messageName),
-          direction: direction === "Rx" ? "Received" : "Transmitted",
+          msgType: mappedProtocol,
+          direction: directionStr,
           status: "info",
           message: cleanMessageName(messageName),
           rawLine: trimmedLine,
@@ -137,13 +219,37 @@ function parseLogLine(line, lineNumber) {
       };
     }
     // --- CHAINED PROTOCOL FLOW ---
-    const protocolList = ["RRC", "MAC", "PDCP", "GTP", "RLC", "T-ENB", "GNB", "S1AP", "MME", "HSS", "SGW", "PGW"];
+    const protocolList = ["RRC", "MAC", "PDCP", "GTP", "RLC", "T-ENB", "GNB", "S1AP", "MME", "HSS", "SGW", "PGW", "X2AP"];
     const protoRegex = new RegExp(`\\b(${protocolList.join("|")})\\b`, "i");
     const protoMatch = trimmedLine.match(protoRegex);
     if (protoMatch) {
       const msgType = protoMatch[1].toUpperCase();
-      const direction = `${lastProtocol} → ${msgType}`;
-      lastProtocol = msgType;
+      // Map protocol names to the correct entity names based on specifications
+      const mapProtocolToEntity = (protocol) => {
+        const upperProtocol = protocol.toUpperCase();
+        switch (upperProtocol) {
+          case "RRC":
+            return "UE";
+          case "S1AP":
+            return "S1AP";
+          case "X2AP":
+            return "X2AP";
+          case "PDCP":
+            return "PDCP";
+          case "GTP":
+            return "GTPB";
+          case "RLC":
+            return "RLCB";
+          case "MAC":
+            return "MACB";
+          default:
+            return protocol; // Keep original if no mapping
+        }
+      };
+      
+      const mappedMsgType = mapProtocolToEntity(msgType);
+      const direction = `${lastProtocol} → ${mappedMsgType}`;
+      lastProtocol = mappedMsgType;
       // Try to extract callId and cellId (look for 'CALL-<digits>' and 'CELL-<digits>' or similar patterns)
       let callId = undefined;
       let cellId = undefined;
@@ -171,7 +277,7 @@ function parseLogLine(line, lineNumber) {
           timestamp: "",
           callId,
           cellId,
-          msgType,
+          msgType: mappedMsgType,
           direction,
           status: "info",
           message,

@@ -1,0 +1,23 @@
+Message ID: 187
+Type: RRC Connection Request
+Direction: UE → ECCB
+Timestamp: 05:02:28.259
+
+Raw Log Entry:
+[05:02:28.259|ECCB|1] [0x02000000]    1, 2[<=]   RRC     1,    1 [0xdb10:          UNKNOWN:T:0x0000:E:0:TH04]               II 187 msgSTDRrcRRCConnectionRequestUeEccb
+
+Message Content:
+This is a RRC Connection Request message sent from UE to ECCB.
+The message contains connection establishment parameters and UE capabilities.
+
+Protocol Details:
+- Protocol: RRC (Radio Resource Control)
+- Message Type: Connection Request
+- Direction: UE to ECCB
+- Status: Received
+
+Technical Parameters:
+- Call ID: 1
+- Cell ID: 1
+- Hex Data: 0x02000000
+- Thread: TH04 
