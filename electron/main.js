@@ -280,6 +280,24 @@ ipcMain.handle('db:deleteFile', async (event, { fileId }) => {
   return { success: false, error: 'File not found' };
 });
 
+// IPC: Read message file content
+ipcMain.handle('readMessageFile', async (event, filename) => {
+  try {
+    const messagesDir = path.join(process.cwd(), 'messages');
+    const filePath = path.join(messagesDir, filename);
+    
+    if (fs.existsSync(filePath)) {
+      const content = await readFile(filePath, 'utf-8');
+      return content;
+    } else {
+      return null; // File doesn't exist
+    }
+  } catch (error) {
+    console.error('Error reading message file:', error);
+    throw error;
+  }
+});
+
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {

@@ -57,7 +57,7 @@ export function ErrorDetectionPage() {
         const instances: ErrorInstance[] = []
         errors.forEach((e: any, idx: number) => {
           // Heuristic: classify error type
-          let type = "other"
+          let type: ErrorPattern["type"] = "other"
           let description = e.message || "Unknown error"
           let severity: ErrorPattern["severity"] = "medium"
           if (/connection/i.test(e.message)) {

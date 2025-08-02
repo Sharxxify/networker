@@ -9,7 +9,11 @@ import { TodoList } from "@/components/todo-list"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
-export function Dashboard() {
+interface DashboardProps {
+  selectedLog?: string | null
+}
+
+export function Dashboard({ selectedLog }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("table-view")
   const [filters, setFilters] = useState<any>({})
   const [hasData, setHasData] = useState(false)
@@ -53,7 +57,7 @@ export function Dashboard() {
             </div>
             <FilterBar onFiltersChange={handleFiltersChange} />
             <div className="mt-4">
-              <LogTable filters={filters} />
+              <LogTable filters={filters} selectedLog={selectedLog} />
             </div>
           </Card>
         </div>

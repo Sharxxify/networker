@@ -58,10 +58,10 @@ export function FilterBar({ onFiltersChange }: FilterBarProps) {
       console.log("Loading filter options from", entries.length, "entries")
 
       // Extract unique values from parsed data
-      const callIds = Array.from(new Set(entries.map((e: any) => e.callId).filter(Boolean))).sort()
-      const cellIds = Array.from(new Set(entries.map((e: any) => e.cellId).filter(Boolean))).sort()
-      const messageTypes = Array.from(new Set(entries.map((e: any) => e.msgType).filter(Boolean))).sort()
-      const statusTypes = Array.from(new Set(entries.map((e: any) => e.status).filter(Boolean))).sort()
+      const callIds = Array.from(new Set(entries.map((e: any) => e.callId).filter(Boolean))).sort() as string[]
+      const cellIds = Array.from(new Set(entries.map((e: any) => e.cellId).filter(Boolean))).sort() as string[]
+      const messageTypes = Array.from(new Set(entries.map((e: any) => e.msgType).filter(Boolean))).sort() as string[]
+      const statusTypes = Array.from(new Set(entries.map((e: any) => e.status).filter(Boolean))).sort() as string[]
 
       console.log("Filter options:", {
         callIds,

@@ -59,7 +59,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
   useEffect(() => {
     if (selectedLogId) {
       console.log("Selected Log ID:", selectedLogId);
-      setHighlightedMessage(selectedLogId)
+      // Don't set highlighted message when showing single message view
     }
   }, [selectedLogId])
 
@@ -73,70 +73,130 @@ export function MessageFlow({ filters }: MessageFlowProps) {
           description: "Upload and parse some log files first to see message flow.",
         })
         setMessages([])
-        // Set default entities for empty state
-        setEntities(["UE", "RRC", "MAC", "PDCP", "eNB", "S1AP", "MME", "HSS", "SGW", "PGW", "Network"])
+        // Set default entities for empty state with ECCB as central entity
+        setEntities(["UE", "ECCB", "MAC", "PDCP", "S1AP", "MME", "X2AP", "eNB2", "Network"])
         return
       }
 
-      // Apply filters if provided
+      // If a specific log is selected, show only that message
       let filteredEntries = entries;
-      if (filters) {
-        if (filters.callId && filters.callId !== "all") {
-          filteredEntries = filteredEntries.filter((e: any) => e.callId === filters.callId);
+      if (selectedLogId) {
+        // Find the specific log entry by line number
+        const selectedEntry = entries.find((e: any) => e.lineNumber.toString() === selectedLogId);
+        if (selectedEntry) {
+          filteredEntries = [selectedEntry];
+          toast({
+            title: "Single message view",
+            description: "Showing only the selected message in the flow.",
+          })
+        } else {
+          toast({
+            title: "Message not found",
+            description: "The selected message could not be found.",
+            variant: "destructive",
+          })
+          setMessages([])
+          setEntities(["ECCB"])
+          setLoading(false)
+          return
         }
-        if (filters.cellId && filters.cellId !== "all") {
-          filteredEntries = filteredEntries.filter((e: any) => e.cellId === filters.cellId);
-        }
-        if (filters.messageType) {
-          filteredEntries = filteredEntries.filter((e: any) => e.msgType === filters.messageType);
-        }
-        if (filters.status) {
-          filteredEntries = filteredEntries.filter((e: any) => e.status === filters.status);
-        }
-        if (filters.search) {
-          const searchLower = filters.search.toLowerCase();
-          filteredEntries = filteredEntries.filter((e: any) =>
-            (e.message && e.message.toLowerCase().includes(searchLower)) ||
-            (e.msgType && e.msgType.toLowerCase().includes(searchLower))
-          );
+      } else {
+        // Apply filters if provided (only when not showing a single message)
+        if (filters) {
+          if (filters.callId && filters.callId !== "all") {
+            filteredEntries = filteredEntries.filter((e: any) => e.callId === filters.callId);
+          }
+          if (filters.cellId && filters.cellId !== "all") {
+            filteredEntries = filteredEntries.filter((e: any) => e.cellId === filters.cellId);
+          }
+          if (filters.messageType) {
+            filteredEntries = filteredEntries.filter((e: any) => e.msgType === filters.messageType);
+          }
+          if (filters.status) {
+            filteredEntries = filteredEntries.filter((e: any) => e.status === filters.status);
+          }
+          if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filteredEntries = filteredEntries.filter((e: any) =>
+              (e.message && e.message.toLowerCase().includes(searchLower)) ||
+              (e.msgType && e.msgType.toLowerCase().includes(searchLower))
+            );
+          }
         }
       }
 
       console.log("Raw entries:", entries) // Debug log
       console.log("Filtered entries:", filteredEntries) // Debug log
 
-      // Convert log entries to message flow format, using raw entity names
+      // Convert log entries to message flow format with proper entity mapping
       const flowMessages = filteredEntries
         .filter((entry: any) => entry.direction && entry.msgType)
         .map((entry: any, index: number) => {
-          // Parse direction to determine from/to
-          let from = "UE"
-          let to = "eNB"
+          // Map protocol names to the correct entity names based on your specifications
+          const mapProtocolToEntity = (protocol: string) => {
+            const upperProtocol = protocol.toUpperCase();
+            switch (upperProtocol) {
+              case "RRC":
+                return "UE";
+              case "S1AP":
+                return "S1AP";
+              case "X2AP":
+                return "X2AP";
+              case "PDCP":
+                return "PDCP";
+              case "GTP":
+                return "GTPB";
+              case "RLC":
+                return "RLCB";
+              case "MAC":
+                return "MACB";
+              default:
+                return protocol; // Keep original if no mapping
+            }
+          };
 
-          // Better direction parsing
+          // Parse direction to determine from/to with ECCB as central entity
+          let from = "ECCB";
+          let to = "ECCB";
+
           if (entry.direction.includes("→")) {
-            const parts = entry.direction.split("→")
-            from = parts[0].trim()
-            to = parts[1].trim()
+            const parts = entry.direction.split("→");
+            const fromEntity = parts[0].trim();
+            const toEntity = parts[1].trim();
+            
+            // If ECCB is involved, it's always the central entity
+            if (fromEntity.includes("ECCB") || toEntity.includes("ECCB")) {
+              if (fromEntity.includes("ECCB")) {
+                from = "ECCB";
+                to = mapProtocolToEntity(toEntity);
+              } else {
+                from = mapProtocolToEntity(fromEntity);
+                to = "ECCB";
+              }
+            } else {
+              // If ECCB is not explicitly mentioned, assume it's the central entity
+              from = mapProtocolToEntity(fromEntity);
+              to = "ECCB";
+            }
           } else if (entry.direction.includes("<=")) {
-            from = "UE"
-            to = entry.msgType || "eNB"
+            // <= means message coming TO ECCB
+            from = mapProtocolToEntity(entry.msgType || "UE");
+            to = "ECCB";
           } else if (entry.direction.includes("=>")) {
-            from = entry.msgType || "eNB"
-            to = "UE"
+            // => means message going FROM ECCB
+            from = "ECCB";
+            to = mapProtocolToEntity(entry.msgType || "UE");
           } else if (entry.direction === "Received") {
-            from = "Network"
-            to = entry.msgType || "UE"
+            from = mapProtocolToEntity(entry.msgType || "Network");
+            to = "ECCB";
           } else if (entry.direction === "Transmitted") {
-            from = entry.msgType || "UE"
-            to = "Network"
+            from = "ECCB";
+            to = mapProtocolToEntity(entry.msgType || "Network");
           } else {
-            // Default fallback
-            from = entry.msgType || "Unknown"
-            to = "Network"
+            // Default fallback - assume ECCB is central
+            from = "ECCB";
+            to = mapProtocolToEntity(entry.msgType || "Unknown");
           }
-
-          // Do not map to main entities, use raw names
 
           return {
             id: entry.lineNumber,
@@ -153,11 +213,20 @@ export function MessageFlow({ filters }: MessageFlowProps) {
 
       console.log("Flow messages:", flowMessages) // Debug log
 
-      // Extract unique entities from the log data in order of first appearance
+      // Extract unique entities from the log data with ECCB as central entity
       const dynamicEntities: string[] = [];
+      
+      // Always include ECCB first as the central entity
+      dynamicEntities.push("ECCB");
+      
+      // Add other entities in order of appearance
       flowMessages.forEach((msg: any) => {
-        if (!dynamicEntities.includes(msg.from)) dynamicEntities.push(msg.from);
-        if (!dynamicEntities.includes(msg.to)) dynamicEntities.push(msg.to);
+        if (msg.from !== "ECCB" && !dynamicEntities.includes(msg.from)) {
+          dynamicEntities.push(msg.from);
+        }
+        if (msg.to !== "ECCB" && !dynamicEntities.includes(msg.to)) {
+          dynamicEntities.push(msg.to);
+        }
       });
 
       setMessages(flowMessages)
@@ -196,7 +265,8 @@ export function MessageFlow({ filters }: MessageFlowProps) {
   }
 
   const handleMessageClick = (messageId: string) => {
-    setHighlightedMessage(highlightedMessage === messageId ? null : messageId)
+    // Redirect to log analysis page with the specific message ID
+    router.push(`/?selectedLog=${messageId}`)
   }
 
   console.log('Current highlightedMessage:', highlightedMessage);
@@ -252,9 +322,24 @@ export function MessageFlow({ filters }: MessageFlowProps) {
     <div className="flex flex-col space-y-4">
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
-          Showing {messages.length} messages from your parsed log data
+          {selectedLogId ? (
+            <>Showing single message view</>
+          ) : (
+            <>Showing {messages.length} messages from your parsed log data</>
+          )}
         </div>
         <div className="flex space-x-2">
+          {selectedLogId && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                router.push('/')
+              }}
+            >
+              ← Back to All Messages
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={loadMessageFlow}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -299,8 +384,8 @@ export function MessageFlow({ filters }: MessageFlowProps) {
                   }
 
                   const isLeftToRight = fromIdx < toIdx
-                  const isHighlighted = String(highlightedMessage) === String(msg.id)
-                  const isFaded = highlightedMessage && !isHighlighted
+                  // When showing single message, no highlighting or fading needed
+                  const isSingleMessage = selectedLogId !== null
 
                   // Calculate left positions for from and to entities (in %)
                   const fromCenter = ((fromIdx + 0.5) / entities.length) * 100
@@ -329,7 +414,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
                                   : "#3b82f6"
                           }
                           strokeWidth="3"
-                          opacity={isFaded ? 0.3 : 1}
+                          opacity={1}
                         />
                         <defs>
                           <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -348,7 +433,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
 
                       {/* Message Label (centered between from and to columns) */}
                       <div
-                        className={`absolute text-xs font-medium transition-opacity duration-200 ${isFaded ? "opacity-30" : ""} ${isHighlighted ? "opacity-100" : ""}`}
+                        className="absolute text-xs font-medium"
                         style={{
                           left: `${(fromCenter + toCenter) / 2}%`,
                           transform: "translateX(-50%) translateY(-20px)",
@@ -384,7 +469,7 @@ export function MessageFlow({ filters }: MessageFlowProps) {
                                     : msg.status === "error"
                                       ? "bg-red-500 hover:bg-red-600"
                                       : "bg-blue-500 hover:bg-blue-600"
-                              } text-white ${isFaded ? "opacity-30" : ""} ${isHighlighted ? "opacity-100 scale-110" : ""}`}
+                              } text-white`}
                               onClick={() => handleMessageClick(msg.id)}
                             >
                               {isLeftToRight ? (

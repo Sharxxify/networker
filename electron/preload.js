@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getLogEntries: (args) => ipcRenderer.invoke('db:getLogEntries', args),
   deleteFile: (args) => ipcRenderer.invoke('db:deleteFile', args),
   
+  // Message file APIs
+  readMessageFile: (filename) => ipcRenderer.invoke('readMessageFile', filename),
+  
   // Listen for file selection from main process
   onFileSelected: (callback) => {
     ipcRenderer.on('file-selected', (event, filePath) => callback(filePath));
