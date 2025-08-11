@@ -4,6 +4,10 @@ const isDev = require('electron-is-dev');
 const fs = require('fs');
 const db = require('./db');
 const { readFile, writeFile, unlink } = require('fs/promises');
+const MessageFileManager = require('./messageFileManager');
+const messageFileManager = new MessageFileManager(path.join(process.cwd(), 'messages'));
+const net = require('net');
+const dgram = require('dgram');
 
 let mainWindow;
 let windowState = {};
@@ -47,7 +51,7 @@ function createWindow() {
   // Load the upload logs page by default
   mainWindow.loadURL(
     isDev
-      ? 'http://localhost:3000/upload'
+      ? 'http://localhost:3001/upload'
       : `file://${path.join(__dirname, '../out/upload/index.html')}`
   );
 
@@ -160,6 +164,16 @@ ipcMain.handle('dialog:openFile', async () => {
   }
   return null;
 });
+// Open directory dialog
+ipcMain.handle('dialog:openDirectory', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory']
+  });
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
 ipcMain.handle('window:minimize', () => { mainWindow && mainWindow.minimize(); });
 ipcMain.handle('window:maximize', () => { mainWindow && (mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize()); });
 ipcMain.handle('window:close', () => { mainWindow && mainWindow.close(); });
@@ -203,6 +217,24 @@ ipcMain.handle('db:parseFile', async (event, { fileId, filePath }) => {
     if (entry) {
       parsedEntries.push(entry);
       parsedLines++;
+      // Create/update message file if we have a numeric message ID
+      const idFromEntry = entry.message || entry.messageId || entry.messageNumber;
+      if (idFromEntry && /^(\d+)$/.test(String(idFromEntry))) {
+        try {
+          messageFileManager.createMessageFile(String(idFromEntry), {
+            messageName: entry.originalMessageName || String(idFromEntry),
+            direction: entry.direction,
+            timestamp: entry.timestamp,
+            callId: entry.callId,
+            cellId: entry.cellId,
+            protocol: entry.msgType,
+            hexData: entry.hexData,
+            rawLine: entry.rawLine,
+            status: entry.status,
+            messageNumber: entry.messageNumber,
+          });
+        } catch {}
+      }
     }
     if (error) {
       parseErrors.push(error);
@@ -258,6 +290,9 @@ ipcMain.handle('db:getLogEntries', (event, { fileId }) => {
     lineNumber: e.line_number,
     rawLine: e.raw_line,
     createdAt: e.created_at,
+    // Preserve stored message (numeric ID) and pass originalMessageName if available
+    message: e.message,
+    originalMessageName: e.original_message_name,
     // Remove snake_case fields to avoid confusion
     call_id: undefined,
     cell_id: undefined,
@@ -281,20 +316,172 @@ ipcMain.handle('db:deleteFile', async (event, { fileId }) => {
 });
 
 // IPC: Read message file content
-ipcMain.handle('readMessageFile', async (event, filename) => {
+ipcMain.handle('readMessageFile', async (event, messageTypeId) => {
   try {
-    const messagesDir = path.join(process.cwd(), 'messages');
-    const filePath = path.join(messagesDir, filename);
-    
-    if (fs.existsSync(filePath)) {
-      const content = await readFile(filePath, 'utf-8');
-      return content;
-    } else {
-      return null; // File doesn't exist
-    }
+    return messageFileManager.readMessageFile(String(messageTypeId));
   } catch (error) {
     console.error('Error reading message file:', error);
     throw error;
+  }
+});
+
+// IPC: Message file utilities
+ipcMain.handle('message:listTypes', async () => {
+  try {
+    return messageFileManager.listMessageTypes();
+  } catch {
+    return [];
+  }
+});
+ipcMain.handle('message:exists', async (event, messageTypeId) => {
+  try {
+    return messageFileManager.messageFileExists(String(messageTypeId));
+  } catch {
+    return false;
+  }
+});
+// Read message content from arbitrary directory (search common patterns)
+function findMessageFile(baseDir, messageTypeId) {
+  const id = String(messageTypeId);
+  const candidates = [
+    path.join(baseDir, id, `${id}.txt`),
+    path.join(baseDir, `${id}.txt`),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  // shallow recursive search for id.txt
+  const stack = [baseDir];
+  while (stack.length) {
+    const dir = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { continue; }
+    for (const ent of entries) {
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) stack.push(full);
+      else if (ent.isFile() && ent.name.toLowerCase() === `${id}.txt`) return full;
+    }
+  }
+  return null;
+}
+ipcMain.handle('message:readFromDir', async (event, { baseDir, messageTypeId }) => {
+  try {
+    const file = findMessageFile(baseDir, messageTypeId);
+    if (!file) return null;
+    return await readFile(file, 'utf-8');
+  } catch (e) {
+    console.error('readFromDir error:', e);
+    return null;
+  }
+});
+
+// Socket programming integration (minimal TCP/UDP)
+let tcpServer = null;
+let tcpClient = null;
+let udpSocket = null;
+let isServerMode = false;
+
+ipcMain.handle('socket:startServer', async (event, { port, protocol }) => {
+  try {
+    if (protocol === 'udp') {
+      if (udpSocket) udpSocket.close();
+      udpSocket = dgram.createSocket('udp4');
+      udpSocket.on('message', (msg, rinfo) => {
+        mainWindow?.webContents.send('socket:message', {
+          id: Date.now().toString(),
+          timestamp: new Date().toISOString(),
+          type: 'log',
+          data: msg.toString(),
+          source: `udp:${rinfo.address}:${rinfo.port}`,
+        });
+      });
+      await new Promise((res, rej) => udpSocket.bind(port, (err) => err ? rej(err) : res()));
+    } else {
+      if (tcpServer) tcpServer.close();
+      tcpServer = net.createServer((socket) => {
+        socket.on('data', (data) => {
+          mainWindow?.webContents.send('socket:message', {
+            id: Date.now().toString(),
+            timestamp: new Date().toISOString(),
+            type: 'log',
+            data: data.toString(),
+            source: `tcp:${socket.remoteAddress}:${socket.remotePort}`,
+          });
+        });
+      });
+      await new Promise((res, rej) => tcpServer.listen(port, (err) => err ? rej(err) : res()));
+    }
+    isServerMode = true;
+    return true;
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('socket:connectClient', async (event, { host, port, protocol }) => {
+  try {
+    if (protocol === 'udp') {
+      if (udpSocket) udpSocket.close();
+      udpSocket = dgram.createSocket('udp4');
+      udpSocket.connect(port, host);
+    } else {
+      if (tcpClient) tcpClient.destroy();
+      tcpClient = new net.Socket();
+      await new Promise((res, rej) => {
+        tcpClient.connect(port, host, res);
+        tcpClient.once('error', rej);
+      });
+    }
+    isServerMode = false;
+    return true;
+  } catch (error) {
+    console.error('Failed to connect client:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('socket:disconnect', async () => {
+  try { if (tcpServer) tcpServer.close(); } catch {}
+  try { if (tcpClient) tcpClient.destroy(); } catch {}
+  try { if (udpSocket) udpSocket.close(); } catch {}
+  tcpServer = null; tcpClient = null; udpSocket = null; isServerMode = false;
+  return true;
+});
+
+ipcMain.handle('socket:send', async (event, message) => {
+  const payload = Buffer.from(typeof message === 'string' ? message : JSON.stringify(message));
+  if (udpSocket) {
+    try { udpSocket.send(payload); } catch {}
+    return true;
+  }
+  if (tcpClient) {
+    try { tcpClient.write(payload); } catch {}
+    return true;
+  }
+  return false;
+});
+
+ipcMain.on('socket:subscribe', (event) => {
+  // no-op; messages are emitted via 'socket:message'
+});
+
+// Process raw log data and return parsed entries
+ipcMain.handle('process:logData', async (event, raw) => {
+  const parseLogLine = require('./parseLogLine');
+  const lines = String(raw).split(/\r?\n/);
+  const entries = [];
+  lines.forEach((line, idx) => {
+    const { entry } = parseLogLine(line, idx + 1);
+    if (entry) entries.push(entry);
+  });
+  return { count: entries.length, entries };
+});
+ipcMain.handle('message:delete', async (event, messageTypeId) => {
+  try {
+    return messageFileManager.deleteMessageFile(String(messageTypeId));
+  } catch {
+    return false;
   }
 });
 

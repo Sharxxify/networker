@@ -1,0 +1,293 @@
+[05:02:28.259|ECCB|1] [0x02000000]    1, 2[<=]   RRC     1,    1 [0xdb10:          UNKNOWN:T:0x0000:E:0:TH04]               II 187 msgSTDRrcRRCConnectionRequestUeEccb
+[05:02:28.260|ECCB|1] [0x02000000]    1, 2[=>]   RRC     1,    1 [0xdb11:       e030244e:T:T:0x0000:E:0:TH04]               II 188 msgSTDRrcRRCConnectionSetupEccbUe
+
+187_Rx_STDRrcRRCConnectionRequestUeEccb  
+188_Rx_STDRrcRRCConnectionSetupEccbUe
+
+[05:02:28.261|ECCB|1] [0x02000001]    1, 2[<=]   PDCP    1,    2 [0xdb12:       a100f45c:T:T:0x0000:E:0:TH04]               II 189 msgSTDPdcpDataIndUe
+[05:02:28.262|ECCB|1] [0x02000001]    1, 2[=>]   PDCP    1,    2 [0xdb13:       b230154d:T:T:0x0000:E:0:TH04]               II 190 msgSTDPdcpDataCnfUe
+
+189_Rx_STDPdcpDataIndUe  
+190_Rx_STDPdcpDataCnfUe
+
+[05:02:28.263|ECCB|1] [0x02000002]    1, 2[<=]   MAC     1,    3 [0xdb14:       c450678e:T:T:0x0000:E:0:TH04]               II 191 msgSTDMacUeUlGrant
+[05:02:28.264|ECCB|1] [0x02000002]    1, 2[=>]   MAC     1,    3 [0xdb15:       d67089fe:T:T:0x0000:E:0:TH04]               II 192 msgSTDMacUlDataTxUe
+
+191_Rx_STDMacUeUlGrant  
+192_Rx_STDMacUlDataTxUe
+
+[05:02:28.265|ECCB|1] [0x02000003]    1, 2[<=]   RLC     1,    4 [0xdb16:       e890acbd:T:T:0x0000:E:0:TH04]               II 193 msgSTDRlcDataInd
+[05:02:28.266|ECCB|1] [0x02000003]    1, 2[=>]   RLC     1,    4 [0xdb17:       f9a0bdef:T:T:0x0000:E:0:TH04]               II 194 msgSTDRlcDataCnf
+
+193_Rx_STDRlcDataInd  
+194_Rx_STDRlcDataCnf
+
+[05:02:28.267|ECCB|1] [0x02000004]    1, 2[<=]   GTP     1,    5 [0xdb18:       aa10cdf1:T:T:0x0000:E:0:TH04]               II 195 msgSTDgtpUplinkPacket
+[05:02:28.268|ECCB|1] [0x02000004]    1, 2[=>]   GTP     1,    5 [0xdb19:       bb20de92:T:T:0x0000:E:0:TH04]               II 196 msgSTDgtpDownlinkPacket
+
+195_Rx_STDgtpUplinkPacket  
+196_Rx_STDgtpDownlinkPacket
+
+[05:02:28.269|ECCB|1] [0x02000005]    1, 2[<=]   T-ENB   1,    6 [0xdb1a:       cc30ef93:T:T:0x0000:E:0:TH04]               II 197 msgSTDTenbInitialUeMsg
+[05:02:28.270|ECCB|1] [0x02000005]    1, 2[=>]   T-ENB   1,    6 [0xdb1b:       dd40f0a5:T:T:0x0000:E:0:TH04]               II 198 msgSTDTenbContextSetupResp
+
+197_Rx_STDTenbInitialUeMsg  
+198_Rx_STDTenbContextSetupResp
+
+[05:02:28.271|ECCB|1] [0x02000006]    1, 2[<=]   GNB     1,    7 [0xdb1c:       ee50f1b6:T:T:0x0000:E:0:TH04]               II 199 msgSTDgnbUeContextReleaseReq
+[05:02:28.272|ECCB|1] [0x02000006]    1, 2[=>]   GNB     1,    7 [0xdb1d:       ff60f2c7:T:T:0x0000:E:0:TH04]               II 200 msgSTDgnbUeContextReleaseComp
+
+199_Rx_STDgnbUeContextReleaseReq  
+200_Rx_STDgnbUeContextReleaseComp
+
+[05:02:28.273|ECCB|1] [0x02000007]    1, 2[<=]   PDCP    1,    8 [0xdb1e:       1130d3d8:T:T:0x0000:E:0:TH04]               II 201 msgSTDPdcpStatusReport
+[05:02:28.274|ECCB|1] [0x02000007]    1, 2[=>]   PDCP    1,    8 [0xdb1f:       2240e4e9:T:T:0x0000:E:0:TH04]               II 202 msgSTDPdcpStatusAck
+
+201_Rx_STDPdcpStatusReport  
+202_Rx_STDPdcpStatusAck
+
+[05:02:28.275|ECCB|1] [0x02000008]    1, 2[<=]   RRC     1,    9 [0xdb20:       3350f5fa:T:T:0x0000:E:0:TH04]               II 203 msgSTDRrcSecurityModeCommand
+[05:02:28.276|ECCB|1] [0x02000008]    1, 2[=>]   RRC     1,    9 [0xdb21:       4461060b:T:T:0x0000:E:0:TH04]               II 204 msgSTDRrcSecurityModeComplete
+
+203_Rx_STDRrcSecurityModeCommand  
+204_Rx_STDRrcSecurityModeComplete
+
+[05:02:28.277|ECCB|1] [0x02000009]    1, 2[<=]    MAC     1,    10 [0xdb22:        5571171c:T:T:0x0000:E:0:TH04]        II 205 msgSTDMacHarqInd
+[05:02:28.278|ECCB|1] [0x02000009]    1, 2[=>]    MAC     1,    10 [0xdb23:        6681282d:T:T:0x0000:E:0:TH04]        II 206 msgSTDMacHarqFeedback
+
+205_Rx_STDMacHarqInd
+206_Rx_STDMacHarqFeedback
+
+[05:02:28.279|ECCB|1] [0x0200000A]    1, 2[<=]    RLC     1,    11 [0xdb24:        7791393e:T:T:0x0000:E:0:TH04]        II 207 msgSTDRlcReestablishmentRequest
+[05:02:28.280|ECCB|1] [0x0200000A]    1, 2[=>]    RLC     1,    11 [0xdb25:        88a14a4f:T:T:0x0000:E:0:TH04]        II 208 msgSTDRlcReestablishmentComplete
+
+207_Rx_STDRlcReestablishmentRequest
+208_Rx_STDRlcReestablishmentComplete
+
+[05:02:28.281|ECCB|1] [0x0200000B]    1, 2[<=]    GTP     1,    12 [0xdb26:        99b15b50:T:T:0x0000:E:0:TH04]        II 209 msgSTDgtpPathSwitchRequest
+[05:02:28.282|ECCB|1] [0x0200000B]    1, 2[=>]    GTP     1,    12 [0xdb27:        aac16c61:T:T:0x0000:E:0:TH04]        II 210 msgSTDgtpPathSwitchAck
+
+209_Rx_STDgtpPathSwitchRequest
+210_Rx_STDgtpPathSwitchAck
+
+[05:02:28.283|ECCB|1] [0x0200000C]    1, 2[<=]    T-ENB   1,    13 [0xdb28:        bbd17d72:T:T:0x0000:E:0:TH04]        II 211 msgSTDTenbHandoverRequest
+[05:02:28.284|ECCB|1] [0x0200000C]    1, 2[=>]    T-ENB   1,    13 [0xdb29:        cce18e83:T:T:0x0000:E:0:TH04]        II 212 msgSTDTenbHandoverCommand
+
+211_Rx_STDTenbHandoverRequest
+212_Rx_STDTenbHandoverCommand
+
+[05:02:28.285|ECCB|1] [0x0200000D]    1, 2[<=]    GNB     1,    14 [0xdb2a:        ddf19f94:T:T:0x0000:E:0:TH04]        II 213 msgSTDgnbAdmissionRequest
+[05:02:28.286|ECCB|1] [0x0200000D]    1, 2[=>]    GNB     1,    14 [0xdb2b:        eef1a0a5:T:T:0x0000:E:0:TH04]        II 214 msgSTDgnbAdmissionResponse
+
+213_Rx_STDgnbAdmissionRequest
+214_Rx_STDgnbAdmissionResponse
+
+[05:02:28.287|ECCB|1] [0x0200000E]    1, 2[<=]    RRC     1,    15 [0xdb2c:        ff01b1b6:T:T:0x0000:E:0:TH04]        II 215 msgSTDRrcMeasurementReport
+[05:02:28.288|ECCB|1] [0x0200000E]    1, 2[=>]    RRC     1,    15 [0xdb2d:        0011c2c7:T:T:0x0000:E:0:TH04]        II 216 msgSTDRrcHandoverPreparation
+
+215_Rx_STDRrcMeasurementReport
+216_Rx_STDRrcHandoverPreparation
+
+[05:02:28.289|ECCB|1] [0x0200000F]    1, 2[<=]    PDCP    1,    16 [0xdb2e:        1121d3d8:T:T:0x0000:E:0:TH04]        II 217 msgSTDPdcpReestablishRequest
+[05:02:28.290|ECCB|1] [0x0200000F]    1, 2[=>]    PDCP    1,    16 [0xdb2f:        2231e4e9:T:T:0x0000:E:0:TH04]        II 218 msgSTDPdcpReestablishComplete
+
+217_Rx_STDPdcpReestablishRequest
+218_Rx_STDPdcpReestablishComplete
+
+[05:02:28.291|ECCB|1] [0x02000010]    1, 2[<=]    MAC     1,    17 [0xdb30:        3341f5fa:T:T:0x0000:E:0:TH04]        II 219 msgSTDMacSchedulingRequest
+[05:02:28.292|ECCB|1] [0x02000010]    1, 2[=>]    MAC     1,    17 [0xdb31:        4452060b:T:T:0x0000:E:0:TH04]        II 220 msgSTDMacSchedulingGrant
+
+219_Rx_STDMacSchedulingRequest
+220_Rx_STDMacSchedulingGrant
+
+[05:02:28.293|ECCB|1] [0x02000011]    1, 2[<=]    RLC     1,    18 [0xdb32:        5562171c:T:T:0x0000:E:0:TH04]        II 221 msgSTDRlcBufferStatus
+[05:02:28.294|ECCB|1] [0x02000011]    1, 2[=>]    RLC     1,    18 [0xdb33:        6672282d:T:T:0x0000:E:0:TH04]        II 222 msgSTDRlcFlowControl
+
+221_Rx_STDRlcBufferStatus
+222_Rx_STDRlcFlowControl
+
+[05:02:28.295|ECCB|1] [0x02000012]    1, 2[<=]    GTP     1,    19 [0xdb34:        7782393e:T:T:0x0000:E:0:TH04]        II 223 msgSTDgtpBearerSetupRequest
+[05:02:28.296|ECCB|1] [0x02000012]    1, 2[=>]    GTP     1,    19 [0xdb35:        88924a4f:T:T:0x0000:E:0:TH04]        II 224 msgSTDgtpBearerSetupResponse
+
+223_Rx_STDgtpBearerSetupRequest
+224_Rx_STDgtpBearerSetupResponse
+
+[05:02:28.297|ECCB|1] [0x02000013]    1, 2[<=]    T-ENB   1,    20 [0xdb36:        99a25b50:T:T:0x0000:E:0:TH04]        II 225 msgSTDTenbPaging
+[05:02:28.298|ECCB|1] [0x02000013]    1, 2[=>]    T-ENB   1,    20 [0xdb37:        aab26c61:T:T:0x0000:E:0:TH04]        II 226 msgSTDTenbServiceRequest
+
+225_Rx_STDTenbPaging
+226_Rx_STDTenbServiceRequest
+
+[05:02:28.299|ECCB|1] [0x02000014]    1, 2[<=]    GNB     1,    21 [0xdb38:        bbc27d72:T:T:0x0000:E:0:TH04]        II 227 msgSTDgnbRadioLinkFailureInd
+[05:02:28.300|ECCB|1] [0x02000014]    1, 2[=>]    GNB     1,    21 [0xdb39:        ccd28e83:T:T:0x0000:E:0:TH04]        II 228 msgSTDgnbRadioLinkRecovery
+
+227_Rx_STDgnbRadioLinkFailureInd
+228_Rx_STDgnbRadioLinkRecovery
+
+[05:02:28.301|ECCB|1] [0x02000015]    1, 2[<=]    RRC     1,    22 [0xdb3a:        dde29f94:T:T:0x0000:E:0:TH04]        II 229 msgSTDRrcUeCapabilityEnquiry
+[05:02:28.302|ECCB|1] [0x02000015]    1, 2[=>]    RRC     1,    22 [0xdb3b:        eef2a0a5:T:T:0x0000:E:0:TH04]        II 230 msgSTDRrcUeCapabilityInformation
+
+229_Rx_STDRrcUeCapabilityEnquiry
+230_Rx_STDRrcUeCapabilityInformation
+
+[05:02:28.303|ECCB|1] [0x02000016]    1, 2[<=]    PDCP    1,    23 [0xdb3c:        ff02b1b6:T:T:0x0000:E:0:TH04]        II 231 msgSTDPdcpSecurityConfig
+[05:02:28.304|ECCB|1] [0x02000016]    1, 2[=>]    PDCP    1,    23 [0xdb3d:        0012c2c7:T:T:0x0000:E:0:TH04]        II 232 msgSTDPdcpSecurityComplete
+
+231_Rx_STDPdcpSecurityConfig
+232_Rx_STDPdcpSecurityComplete
+
+[05:02:28.305|ECCB|1] [0x02000017]    1, 2[<=]    MAC     1,    24 [0xdb3e:        1122d3d8:T:T:0x0000:E:0:TH04]        II 233 msgSTDMacPowerHeadroomReport
+[05:02:28.306|ECCB|1] [0x02000017]    1, 2[=>]    MAC     1,    24 [0xdb3f:        2232e4e9:T:T:0x0000:E:0:TH04]        II 234 msgSTDMacTimingAdvanceCmd
+
+233_Rx_STDMacPowerHeadroomReport
+234_Rx_STDMacTimingAdvanceCmd
+
+[05:02:28.307|ECCB|1] [0x02000018]    1, 2[<=]    RLC     1,    25 [0xdb40:        3342f5fa:T:T:0x0000:E:0:TH04]        II 235 msgSTDRlcConfigurationRequest
+[05:02:28.308|ECCB|1] [0x02000018]    1, 2[=>]    RLC     1,    25 [0xdb41:        4453060b:T:T:0x0000:E:0:TH04]        II 236 msgSTDRlcConfigurationComplete
+
+235_Rx_STDRlcConfigurationRequest
+236_Rx_STDRlcConfigurationComplete
+
+[05:02:28.309|ECCB|1] [0x02000019]    1, 2[<=]    GTP     1,    26 [0xdb42:        5563171c:T:T:0x0000:E:0:TH04]        II 237 msgSTDgtpModifyBearerRequest
+[05:02:28.310|ECCB|1] [0x02000019]    1, 2[=>]    GTP     1,    26 [0xdb43:        6673282d:T:T:0x0000:E:0:TH04]        II 238 msgSTDgtpModifyBearerResponse
+
+237_Rx_STDgtpModifyBearerRequest
+238_Rx_STDgtpModifyBearerResponse
+
+[05:02:28.311|ECCB|1] [0x0200001A]    1, 2[<=]    T-ENB   1,    27 [0xdb44:        7783393e:T:T:0x0000:E:0:TH04]        II 239 msgSTDTenbCellUpdate
+[05:02:28.312|ECCB|1] [0x0200001A]    1, 2[=>]    T-ENB   1,    27 [0xdb45:        88934a4f:T:T:0x0000:E:0:TH04]        II 240 msgSTDTenbCellUpdateConfirm
+
+239_Rx_STDTenbCellUpdate
+240_Rx_STDTenbCellUpdateConfirm
+
+[05:02:28.313|ECCB|1] [0x0200001B]    1, 2[<=]    GNB     1,    28 [0xdb46:        99a35b50:T:T:0x0000:E:0:TH04]        II 241 msgSTDgnbPathFailure
+[05:02:28.314|ECCB|1] [0x0200001B]    1, 2[=>]    GNB     1,    28 [0xdb47:        aab36c61:T:T:0x0000:E:0:TH04]        II 242 msgSTDgnbPathRecovery
+
+241_Rx_STDgnbPathFailure
+242_Rx_STDgnbPathRecovery
+
+[05:02:28.315|ECCB|1] [0x0200001C]    1, 2[<=]    RRC     1,    29 [0xdb48:        bbc37d72:T:T:0x0000:E:0:TH04]        II 243 msgSTDRrcConnectionReestablishmentRequest
+[05:02:28.316|ECCB|1] [0x0200001C]    1, 2[=>]    RRC     1,    29 [0xdb49:        ccd38e83:T:T:0x0000:E:0:TH04]        II 244 msgSTDRrcConnectionReestablishmentComplete
+
+243_Rx_STDRrcConnectionReestablishmentRequest
+244_Rx_STDRrcConnectionReestablishmentComplete
+
+[05:02:28.317|ECCB|1] [0x0200001D]    1, 2[<=]    PDCP    1,    30 [0xdb4a:        dde39f94:T:T:0x0000:E:0:TH04]        II 245 msgSTDPdcpCipheringConfig
+[05:02:28.318|ECCB|1] [0x0200001D]    1, 2[=>]    PDCP    1,    30 [0xdb4b:        eef3a0a5:T:T:0x0000:E:0:TH04]        II 246 msgSTDPdcpCipheringComplete
+
+245_Rx_STDPdcpCipheringConfig
+246_Rx_STDPdcpCipheringComplete
+
+[05:02:28.319|ECCB|1] [0x0200001E]    1, 2[<=]    MAC     1,    31 [0xdb4c:        ff03b1b6:T:T:0x0000:E:0:TH04]        II 247 msgSTDMacDRXConfig
+[05:02:28.320|ECCB|1] [0x0200001E]    1, 2[=>]    MAC     1,    31 [0xdb4d:        0013c2c7:T:T:0x0000:E:0:TH04]        II 248 msgSTDMacDRXStatus
+
+247_Rx_STDMacDRXConfig
+248_Rx_STDMacDRXStatus
+
+[05:02:28.321|ECCB|1] [0x0200001F]    1, 2[<=]    RLC     1,    32 [0xdb4e:        1123d3d8:T:T:0x0000:E:0:TH04]        II 249 msgSTDRlcPollRetransmit
+[05:02:28.322|ECCB|1] [0x0200001F]    1, 2[=>]    RLC     1,    32 [0xdb4f:        2233e4e9:T:T:0x0000:E:0:TH04]        II 250 msgSTDRlcPollRetransmitAck
+
+249_Rx_STDRlcPollRetransmit
+250_Rx_STDRlcPollRetransmitAck
+
+[05:02:28.323|ECCB|1] [0x02000020]    1, 2[<=]    GTP     1,    33 [0xdb50:        3343f5fa:T:T:0x0000:E:0:TH04]        II 251 msgSTDgtpCreatePdnConnectionRequest
+[05:02:28.324|ECCB|1] [0x02000020]    1, 2[=>]    GTP     1,    33 [0xdb51:        4454060b:T:T:0x0000:E:0:TH04]        II 252 msgSTDgtpCreatePdnConnectionResponse
+
+251_Rx_STDgtpCreatePdnConnectionRequest
+252_Rx_STDgtpCreatePdnConnectionResponse
+
+[05:02:28.325|ECCB|1] [0x02000021]    1, 2[<=]    T-ENB   1,    34 [0xdb52:        5564171c:T:T:0x0000:E:0:TH04]        II 253 msgSTDTenbRadioBearerSetup
+[05:02:28.326|ECCB|1] [0x02000021]    1, 2[=>]    T-ENB   1,    34 [0xdb53:        6674282d:T:T:0x0000:E:0:TH04]        II 254 msgSTDTenbRadioBearerSetupComplete
+
+253_Rx_STDTenbRadioBearerSetup
+254_Rx_STDTenbRadioBearerSetupComplete
+
+[05:02:28.327|ECCB|1] [0x02000022]    1, 2[<=]    GNB     1,    35 [0xdb54:        7784393e:T:T:0x0000:E:0:TH04]        II 255 msgSTDgnbUeCapabilityInfo
+[05:02:28.328|ECCB|1] [0x02000022]    1, 2[=>]    GNB     1,    35 [0xdb55:        88944a4f:T:T:0x0000:E:0:TH04]        II 256 msgSTDgnbUeCapabilityReq
+
+255_Rx_STDgnbUeCapabilityInfo
+256_Rx_STDgnbUeCapabilityReq
+
+[05:02:28.329|ECCB|1] [0x02000023]    1, 2[<=]    RRC     1,    36 [0xdb56:        99a45b50:T:T:0x0000:E:0:TH04]        II 257 msgSTDRrcConfigurationRequest
+[05:02:28.330|ECCB|1] [0x02000023]    1, 2[=>]    RRC     1,    36 [0xdb57:        aab46c61:T:T:0x0000:E:0:TH04]        II 258 msgSTDRrcConfigurationComplete
+
+257_Rx_STDRrcConfigurationRequest
+258_Rx_STDRrcConfigurationComplete
+
+[05:02:28.331|ECCB|1] [0x02000024]    1, 2[<=]    PDCP    1,    37 [0xdb58:        bbc47d72:T:T:0x0000:E:0:TH04]        II 259 msgSTDPdcpDataForwarding
+[05:02:28.332|ECCB|1] [0x02000024]    1, 2[=>]    PDCP    1,    37 [0xdb59:        ccd48e83:T:T:0x0000:E:0:TH04]        II 260 msgSTDPdcpDataForwardingAck
+
+259_Rx_STDPdcpDataForwarding
+260_Rx_STDPdcpDataForwardingAck
+
+[05:02:28.333|ECCB|1] [0x02000025]    1, 2[<=]    MAC     1,    38 [0xdb5a:        dde49f94:T:T:0x0000:E:0:TH04]        II 261 msgSTDMacRadioLinkEstablishment
+[05:02:28.334|ECCB|1] [0x02000025]    1, 2[=>]    MAC     1,    38 [0xdb5b:        eef4a0a5:T:T:0x0000:E:0:TH04]        II 262 msgSTDMacRadioLinkEstablishmentComplete
+
+261_Rx_STDMacRadioLinkEstablishment
+262_Rx_STDMacRadioLinkEstablishmentComplete
+
+[05:02:28.335|ECCB|1] [0x02000026]    1, 2[<=]    RLC     1,    39 [0xdb5c:        ff04b1b6:T:T:0x0000:E:0:TH04]        II 263 msgSTDRlcBufferClear
+[05:02:28.336|ECCB|1] [0x02000026]    1, 2[=>]    RLC     1,    39 [0xdb5d:        0014c2c7:T:T:0x0000:E:0:TH04]        II 264 msgSTDRlcBufferClearConfirm
+
+263_Rx_STDRlcBufferClear
+264_Rx_STDRlcBufferClearConfirm
+
+[05:02:28.337|ECCB|1] [0x02000027]    1, 2[<=]    GTP     1,    40 [0xdb5e:        1124d3d8:T:T:0x0000:E:0:TH04]        II 265 msgSTDgtpDeletePdnConnectionRequest
+[05:02:28.338|ECCB|1] [0x02000027]    1, 2[=>]    GTP     1,    40 [0xdb5f:        2234e4e9:T:T:0x0000:E:0:TH04]        II 266 msgSTDgtpDeletePdnConnectionResponse
+
+265_Rx_STDgtpDeletePdnConnectionRequest
+266_Rx_STDgtpDeletePdnConnectionResponse
+
+[05:02:28.339|ECCB|1] [0x02000028]    1, 2[<=]    T-ENB   1,    41 [0xdb60:        3344f5fa:T:T:0x0000:E:0:TH04]        II 267 msgSTDTenbConnectionRelease
+[05:02:28.340|ECCB|1] [0x02000028]    1, 2[=>]    T-ENB   1,    41 [0xdb61:        4455060b:T:T:0x0000:E:0:TH04]        II 268 msgSTDTenbConnectionReleaseComplete
+
+267_Rx_STDTenbConnectionRelease
+268_Rx_STDTenbConnectionReleaseComplete
+
+[05:02:28.341|ECCB|1] [0x02000029]    1, 2[<=]    GNB     1,    42 [0xdb62:        5565171c:T:T:0x0000:E:0:TH04]        II 269 msgSTDgnbHandoverPreparationFailure
+[05:02:28.342|ECCB|1] [0x02000029]    1, 2[=>]    GNB     1,    42 [0xdb63:        6675282d:T:T:0x0000:E:0:TH04]        II 270 msgSTDgnbHandoverPreparationSuccess
+
+269_Rx_STDgnbHandoverPreparationFailure
+270_Rx_STDgnbHandoverPreparationSuccess
+
+[05:02:28.343|ECCB|1] [0x0200002A]    1, 2[<=]    RRC     1,    43 [0xdb64:        7785393e:T:T:0x0000:E:0:TH04]        II 271 msgSTDRrcRadioBearerRelease
+[05:02:28.344|ECCB|1] [0x0200002A]    1, 2[=>]    RRC     1,    43 [0xdb65:        88954a4f:T:T:0x0000:E:0:TH04]        II 272 msgSTDRrcRadioBearerReleaseComplete
+
+271_Rx_STDRrcRadioBearerRelease
+272_Rx_STDRrcRadioBearerReleaseComplete
+
+[05:02:28.345|ECCB|1] [0x0200002B]    1, 2[<=]    PDCP    1,    44 [0xdb66:        99a55b50:T:T:0x0000:E:0:TH04]        II 273 msgSTDPdcpIntegrityProtectionConfig
+[05:02:28.346|ECCB|1] [0x0200002B]    1, 2[=>]    PDCP    1,    44 [0xdb67:        aab56c61:T:T:0x0000:E:0:TH04]        II 274 msgSTDPdcpIntegrityProtectionComplete
+
+273_Rx_STDPdcpIntegrityProtectionConfig
+274_Rx_STDPdcpIntegrityProtectionComplete
+
+[05:02:28.347|ECCB|1] [0x0200002C]    1, 2[<=]    MAC     1,    45 [0xdb68:        bbc57d72:T:T:0x0000:E:0:TH04]        II 275 msgSTDMacSRConfiguration
+[05:02:28.348|ECCB|1] [0x0200002C]    1, 2[=>]    MAC     1,    45 [0xdb69:        ccd58e83:T:T:0x0000:E:0:TH04]        II 276 msgSTDMacSRStatus
+
+275_Rx_STDMacSRConfiguration
+276_Rx_STDMacSRStatus
+
+[05:02:28.349|ECCB|1] [0x0200002D]    1, 2[<=]    RLC     1,    46 [0xdb6a:        dde59f94:T:T:0x0000:E:0:TH04]        II 277 msgSTDRlcResetRequest
+[05:02:28.350|ECCB|1] [0x0200002D]    1, 2[=>]    RLC     1,    46 [0xdb6b:        eef5a0a5:T:T:0x0000:E:0:TH04]        II 278 msgSTDRlcResetConfirm
+
+277_Rx_STDRlcResetRequest
+278_Rx_STDRlcResetConfirm
+
+[05:02:28.351|ECCB|1] [0x0200002E]    1, 2[<=]    GTP     1,    47 [0xdb6c:        ff05b1b6:T:T:0x0000:E:0:TH04]        II 279 msgSTDgtpEchoRequest
+[05:02:28.352|ECCB|1] [0x0200002E]    1, 2[=>]    GTP     1,    47 [0xdb6d:        0015c2c7:T:T:0x0000:E:0:TH04]        II 280 msgSTDgtpEchoResponse
+
+279_Rx_STDgtpEchoRequest
+280_Rx_STDgtpEchoResponse
+
+[05:02:28.353|ECCB|1] [0x0200002F]    1, 2[<=]    T-ENB   1,    48 [0xdb6e:        1125d3d8:T:T:0x0000:E:0:TH04]        II 281 msgSTDTenbUeContextReleaseRequest
+[05:02:28.354|ECCB|1] [0x0200002F]    1, 2[=>]    T-ENB   1,    48 [0xdb6f:        2235e4e9:T:T:0x0000:E:0:TH04]        II 282 msgSTDTenbUeContextReleaseComplete
+
+281_Rx_STDTenbUeContextReleaseRequest
+282_Rx_STDTenbUeContextReleaseComplete
+
+[05:02:28.355|ECCB|1] [0x02000030]    1, 2[<=]    GNB     1,    49 [0xdb70:        3345f5fa:T:T:0x0000:E:0:TH04]        II 283 msgSTDgnbAdmissionFailure
+[05:02:28.356|ECCB|1] [0x02000030]    1, 2[=>]    GNB     1,    49 [0xdb71:        4456060b:T:T:0x0000:E:0:TH04]        II 284 msgSTDgnbAdmissionSuccess
+
+283_Rx_STDgnbAdmissionFailure
+284_Rx_STDgnbAdmissionSuccess

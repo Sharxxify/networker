@@ -1,39 +1,48 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MessageFlow } from "@/components/message-flow"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { Suspense } from "react";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageFlow } from "@/components/message-flow";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 export function MessageFlowPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MessageFlowPageContent />
+    </Suspense>
+  );
+}
+
+function MessageFlowPageContent() {
   const [filters, setFilters] = useState({
     callId: "all",
     cellId: "all",
-  })
-  const [callIdOptions, setCallIdOptions] = useState<string[]>([])
-  const [cellIdOptions, setCellIdOptions] = useState<string[]>([])
-  const [loadingOptions, setLoadingOptions] = useState(false)
+  });
+  const [callIdOptions, setCallIdOptions] = useState<string[]>([]);
+  const [cellIdOptions, setCellIdOptions] = useState<string[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
   useEffect(() => {
     const loadOptions = async () => {
-      setLoadingOptions(true)
+      setLoadingOptions(true);
       try {
-        const entries = await (window as any).electronAPI.getLogEntries({})
-        const callIds = Array.from(new Set((entries as any[]).map((e: any) => e.callId).filter(Boolean) as string[])).sort()
-        const cellIds = Array.from(new Set((entries as any[]).map((e: any) => e.cellId).filter(Boolean) as string[])).sort()
-        setCallIdOptions(callIds)
-        setCellIdOptions(cellIds)
-      } catch (err) {
-        setCallIdOptions([])
-        setCellIdOptions([])
+        const entries = await (window as any).electronAPI.getLogEntries({});
+        const callIds = Array.from(new Set((entries as any[]).map((e: any) => e.callId).filter(Boolean) as string[])).sort();
+        const cellIds = Array.from(new Set((entries as any[]).map((e: any) => e.cellId).filter(Boolean) as string[])).sort();
+        setCallIdOptions(callIds);
+        setCellIdOptions(cellIds);
+      } catch {
+        setCallIdOptions([]);
+        setCellIdOptions([]);
       } finally {
-        setLoadingOptions(false)
+        setLoadingOptions(false);
       }
-    }
-    loadOptions()
-  }, [])
+    };
+    loadOptions();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -60,7 +69,7 @@ export function MessageFlowPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Calls</SelectItem>
-              {callIdOptions.map((id) => (
+              {callIdOptions.map(id => (
                 <SelectItem key={id} value={id}>{id}</SelectItem>
               ))}
             </SelectContent>
@@ -75,7 +84,7 @@ export function MessageFlowPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Cells</SelectItem>
-              {cellIdOptions.map((id) => (
+              {cellIdOptions.map(id => (
                 <SelectItem key={id} value={id}>{id}</SelectItem>
               ))}
             </SelectContent>
@@ -93,5 +102,5 @@ export function MessageFlowPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

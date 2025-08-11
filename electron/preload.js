@@ -23,6 +23,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Message file APIs
   readMessageFile: (filename) => ipcRenderer.invoke('readMessageFile', filename),
+  listMessageTypes: () => ipcRenderer.invoke('message:listTypes'),
+  messageFileExists: (messageTypeId) => ipcRenderer.invoke('message:exists', messageTypeId),
+  deleteMessageFile: (messageTypeId) => ipcRenderer.invoke('message:delete', messageTypeId),
+
+  // Directory dialog and external message reading
+  openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
+  readMessageFromDir: (args) => ipcRenderer.invoke('message:readFromDir', args),
+
+  // Socket APIs
+  startSocketServer: (config) => ipcRenderer.invoke('socket:startServer', config),
+  connectSocketClient: (config) => ipcRenderer.invoke('socket:connectClient', config),
+  disconnectSocket: () => ipcRenderer.invoke('socket:disconnect'),
+  sendSocketMessage: (message) => ipcRenderer.invoke('socket:send', message),
+  onSocketMessage: (callback) => ipcRenderer.on('socket:message', (_e, data) => callback(data)),
+  processLogData: (raw) => ipcRenderer.invoke('process:logData', raw),
   
   // Listen for file selection from main process
   onFileSelected: (callback) => {

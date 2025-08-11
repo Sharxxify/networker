@@ -137,21 +137,26 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             const upperProtocol = protocol.toUpperCase();
             switch (upperProtocol) {
               case "RRC":
-                return "UE";
+                return "BE"; // RRC → BE
               case "S1AP":
-                return "S1AP";
+                return "MME"; // S1AP → MME
               case "X2AP":
-                return "X2AP";
+              case "S2AP":
+                return "ENB2"; // X2AP/S2AP → ENB2
               case "PDCP":
-                return "PDCP";
+              case "PDCB":
+                return "PDCP"; // PDCB → PDCP
               case "GTP":
+              case "GTPB":
                 return "GTPB";
               case "RLC":
+              case "RLCB":
                 return "RLCB";
               case "MAC":
+              case "MACB":
                 return "MACB";
               default:
-                return protocol; // Keep original if no mapping
+                return upperProtocol; // Keep normalized
             }
           };
 
@@ -202,7 +207,8 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             id: entry.lineNumber,
             from,
             to,
-            message: cleanMessageName(entry.message),
+            // Only show numeric message type ID
+            message: entry.message || entry.messageId,
             timestamp: entry.timestamp || `Line ${entry.lineNumber}`,
             status: entry.status,
             messageId: entry.messageId,

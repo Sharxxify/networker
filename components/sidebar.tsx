@@ -30,6 +30,12 @@ export function Sidebar() {
       href: "/",
     },
     {
+      id: "analysis",
+      label: "Analysis",
+      icon: Filter,
+      href: "/analysis",
+    },
+    {
       id: "message-flow",
       label: "Message Flow View",
       icon: GitBranch,
@@ -40,6 +46,12 @@ export function Sidebar() {
       label: "Filters and Debugs",
       icon: Filter,
       href: "/filters",
+    },
+    {
+      id: "network",
+      label: "Network",
+      icon: Terminal,
+      href: "/network",
     },
     {
       id: "error-detection",

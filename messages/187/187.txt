@@ -1,0 +1,27 @@
+Message ID: 187
+Type: RRC RRCConnection Request Ue Eccb
+Direction: UE → ECCB
+Timestamp: 
+
+Raw Log Entry:
+187_Rx_STDRrcRRCConnectionRequestUeEccb
+
+Message Content:
+This is a RRC RRCConnection Request Ue Eccb message.
+The message contains User Equipment parameters.
+
+Protocol Details:
+- Protocol: UE
+- Message Type: RRC RRCConnection Request Ue Eccb
+- Direction: UE → ECCB
+- Status: info
+
+Technical Parameters:
+- Call ID: N/A
+- Cell ID: N/A
+- Hex Data: N/A
+- Message Number: N/A
+
+Additional Information:
+- File created: 2025-08-11T18:14:00.544Z
+- Message Type ID: 187

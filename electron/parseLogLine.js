@@ -37,7 +37,7 @@ function determineStatus(messageName, additionalData) {
   return "info";
 }
 
-function extractProtocolFromMessage(messageName) {
+  function extractProtocolFromMessage(messageName) {
   const lower = messageName.toLowerCase();
   if (lower.includes("rrc")) return "RRC";
   if (lower.includes("mac")) return "MAC";
@@ -58,7 +58,7 @@ function extractTimestamp(line) {
   return match ? match[1] : "";
 }
 
-function parseLogLine(line, lineNumber) {
+  function parseLogLine(line, lineNumber) {
   const trimmedLine = line.trim();
   if (!trimmedLine) return { entry: null, error: null };
 
@@ -103,21 +103,26 @@ function parseLogLine(line, lineNumber) {
         const upperProtocol = protocol.toUpperCase();
         switch (upperProtocol) {
           case "RRC":
-            return "UE";
+            return "BE"; // RRC → BE
           case "S1AP":
-            return "S1AP";
+            return "MME"; // S1AP → MME
           case "X2AP":
-            return "X2AP";
+          case "S2AP":
+            return "ENB2"; // X2AP/S2AP → ENB2
           case "PDCP":
-            return "PDCP";
+          case "PDCB":
+            return "PDCP"; // PDCB → PDCP
           case "GTP":
+          case "GTPB":
             return "GTPB";
           case "RLC":
+          case "RLCB":
             return "RLCB";
           case "MAC":
+          case "MACB":
             return "MACB";
           default:
-            return protocol; // Keep original if no mapping
+            return upperProtocol; // Keep normalized protocol if no mapping
         }
       };
       
@@ -141,6 +146,8 @@ function parseLogLine(line, lineNumber) {
       if (messageNumberMatch) {
         messageNumber = messageNumberMatch[1];
       }
+      // Display requirement: Only print message type ID
+      const displayMessage = messageId || messageNumber || "";
       
       return {
         entry: {
@@ -151,13 +158,15 @@ function parseLogLine(line, lineNumber) {
           msgType: mappedProtocol,
           direction: directionStr,
           status: determineStatus(messageName, additionalData),
-          message: cleanMessageName(messageName),
+          message: displayMessage,
           rawLine: trimmedLine,
           lineNumber,
           messageId,
           protocol: mappedProtocol,
           hexData: hexValue,
           messageNumber: messageNumber,
+          originalMessageName: messageName,
+          messageName: cleanMessageName(messageName),
         },
         error: null,
       };
@@ -210,16 +219,19 @@ function parseLogLine(line, lineNumber) {
           msgType: mappedProtocol,
           direction: directionStr,
           status: "info",
-          message: cleanMessageName(messageName),
+          message: messageId, // Only the numeric message type ID as display text
           rawLine: trimmedLine,
           lineNumber,
           messageId,
+          originalMessageName: messageName,
+          messageName: cleanMessageName(messageName),
         },
         error: null,
       };
     }
     // --- CHAINED PROTOCOL FLOW ---
-    const protocolList = ["RRC", "MAC", "PDCP", "GTP", "RLC", "T-ENB", "GNB", "S1AP", "MME", "HSS", "SGW", "PGW", "X2AP"];
+    // Restrict to ECCB-related protocols to keep view centered on ECCB entities
+    const protocolList = ["RRC", "MAC", "PDCP", "GTP", "RLC", "S1AP", "X2AP"];
     const protoRegex = new RegExp(`\\b(${protocolList.join("|")})\\b`, "i");
     const protoMatch = trimmedLine.match(protoRegex);
     if (protoMatch) {
@@ -229,26 +241,31 @@ function parseLogLine(line, lineNumber) {
         const upperProtocol = protocol.toUpperCase();
         switch (upperProtocol) {
           case "RRC":
-            return "UE";
+            return "BE";
           case "S1AP":
-            return "S1AP";
+            return "MME";
           case "X2AP":
-            return "X2AP";
+          case "S2AP":
+            return "ENB2";
           case "PDCP":
+          case "PDCB":
             return "PDCP";
           case "GTP":
+          case "GTPB":
             return "GTPB";
           case "RLC":
+          case "RLCB":
             return "RLCB";
           case "MAC":
+          case "MACB":
             return "MACB";
           default:
-            return protocol; // Keep original if no mapping
+            return upperProtocol; // Keep normalized if no mapping
         }
       };
       
       const mappedMsgType = mapProtocolToEntity(msgType);
-      const direction = `${lastProtocol} → ${mappedMsgType}`;
+      const direction = `ECCB → ${mappedMsgType}`;
       lastProtocol = mappedMsgType;
       // Try to extract callId and cellId (look for 'CALL-<digits>' and 'CELL-<digits>' or similar patterns)
       let callId = undefined;
@@ -269,8 +286,8 @@ function parseLogLine(line, lineNumber) {
       }
       if (!callId) callId = 'UNKNOWN';
       if (!cellId) cellId = 'UNKNOWN';
-      // Use the rest of the line as message
-      const message = trimmedLine;
+      // Use only the cleaned message name when possible
+      const message = cleanMessageName(trimmedLine);
       return {
         entry: {
           id: `${lineNumber}-fallback`,
@@ -280,7 +297,7 @@ function parseLogLine(line, lineNumber) {
           msgType: mappedMsgType,
           direction,
           status: "info",
-          message,
+          message, // Fallback keeps original line
           rawLine: trimmedLine,
           lineNumber,
         },

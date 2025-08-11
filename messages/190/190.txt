@@ -1,0 +1,27 @@
+Message ID: 190
+Type: S1AP Uplink Nas Transport
+Direction: S1AP → ECCB
+Timestamp: 
+
+Raw Log Entry:
+190_Rx_STDS1apUplinkNasTransport
+
+Message Content:
+This is a S1AP Uplink Nas Transport message.
+The message contains S1 Application Protocol parameters.
+
+Protocol Details:
+- Protocol: S1AP
+- Message Type: S1AP Uplink Nas Transport
+- Direction: S1AP → ECCB
+- Status: info
+
+Technical Parameters:
+- Call ID: N/A
+- Cell ID: N/A
+- Hex Data: N/A
+- Message Number: N/A
+
+Additional Information:
+- File created: 2025-08-11T18:14:00.550Z
+- Message Type ID: 190

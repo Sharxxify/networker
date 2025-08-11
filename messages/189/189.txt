@@ -1,0 +1,27 @@
+Message ID: 189
+Type: S1AP Initial Ue Message
+Direction: S1AP → ECCB
+Timestamp: 
+
+Raw Log Entry:
+189_Rx_STDS1apInitialUeMessage
+
+Message Content:
+This is a S1AP Initial Ue Message message.
+The message contains S1 Application Protocol parameters.
+
+Protocol Details:
+- Protocol: S1AP
+- Message Type: S1AP Initial Ue Message
+- Direction: S1AP → ECCB
+- Status: info
+
+Technical Parameters:
+- Call ID: N/A
+- Cell ID: N/A
+- Hex Data: N/A
+- Message Number: N/A
+
+Additional Information:
+- File created: 2025-08-11T18:14:00.549Z
+- Message Type ID: 189
