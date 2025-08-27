@@ -9,8 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "electron": "electron .",
-    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
+    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
     "electron-build": "npm run build && electron-builder",
+    "electron-rebuild": "electron-rebuild",
+    "postinstall": "electron-rebuild",
     "electron-pack": "npm run build && electron-builder --publish=never"
   },
   "dependencies": {
@@ -72,6 +74,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

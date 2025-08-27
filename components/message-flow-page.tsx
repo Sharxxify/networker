@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageFlow } from "@/components/message-flow";
+import { MessageDumpConfig } from "@/components/message-dump-config";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -93,14 +94,22 @@ function MessageFlowPageContent() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Network Message Flow</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MessageFlow filters={filters} />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Network Message Flow</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MessageFlow filters={filters} />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="lg:col-span-1">
+          <MessageDumpConfig />
+        </div>
+      </div>
     </div>
   );
 }
