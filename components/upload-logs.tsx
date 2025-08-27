@@ -34,7 +34,13 @@ export function UploadLogs() {
 
   const loadExistingFiles = async () => {
     try {
-      const data = await window.electronAPI.getFiles()
+      const api = typeof window !== "undefined" ? (window as any).electronAPI : undefined
+      if (!api?.getFiles) {
+        console.warn("electronAPI.getFiles is not available. Are you running outside Electron?")
+        setFiles([])
+        return
+      }
+      const data = await api.getFiles()
       const existingFiles = data.map((file: any) => ({
         id: file.id.toString(),
         name: file.original_name,
@@ -52,6 +58,17 @@ export function UploadLogs() {
 
   const uploadFile = async (file: File, fileId: string) => {
     try {
+      const api = typeof window !== "undefined" ? (window as any).electronAPI : undefined
+      if (!api?.uploadFile) {
+        setFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, status: "error", progress: 0 } : f)))
+        toast({
+          title: "Upload not available",
+          description: "Electron API is not available. Please run the desktop app to upload files.",
+          variant: "destructive",
+        })
+        return
+      }
+
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setFiles((prev) =>
@@ -66,7 +83,7 @@ export function UploadLogs() {
 
       // Read file as ArrayBuffer
       const buffer = await file.arrayBuffer()
-      const data = await window.electronAPI.uploadFile({
+      const data = await api.uploadFile({
         name: file.name,
         buffer: Array.from(new Uint8Array(buffer)),
         type: file.type,
@@ -97,7 +114,17 @@ export function UploadLogs() {
     if (!fileData.serverFile) return
     setFiles((prev) => prev.map((f) => (f.id === fileData.id ? { ...f, status: "parsing" } : f)))
     try {
-      const result = await window.electronAPI.parseFile({
+      const api = typeof window !== "undefined" ? (window as any).electronAPI : undefined
+      if (!api?.parseFile) {
+        setFiles((prev) => prev.map((f) => (f.id === fileData.id ? { ...f, status: "completed" } : f)))
+        toast({
+          title: "Parsing not available",
+          description: "Electron API is not available. Please run the desktop app to parse files.",
+          variant: "destructive",
+        })
+        return
+      }
+      const result = await api.parseFile({
         fileId: fileData.serverFile.id,
         filePath: fileData.serverFile.file_path,
       })
@@ -150,11 +177,20 @@ export function UploadLogs() {
     const file = files.find((f) => f.id === id)
     if (file?.serverFile) {
       try {
-        await window.electronAPI.deleteFile({ fileId: file.serverFile.id })
-        toast({
-          title: "File deleted",
-          description: `${file.name} has been deleted successfully.`,
-        })
+        const api = typeof window !== "undefined" ? (window as any).electronAPI : undefined
+        if (!api?.deleteFile) {
+          toast({
+            title: "Delete not available",
+            description: "Electron API is not available. Please run the desktop app to delete files.",
+            variant: "destructive",
+          })
+        } else {
+          await api.deleteFile({ fileId: file.serverFile.id })
+          toast({
+            title: "File deleted",
+            description: `${file.name} has been deleted successfully.`,
+          })
+        }
       } catch (error) {
         toast({
           title: "Delete failed",

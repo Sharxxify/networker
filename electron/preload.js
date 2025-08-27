@@ -26,6 +26,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   listMessageTypes: () => ipcRenderer.invoke('message:listTypes'),
   messageFileExists: (messageTypeId) => ipcRenderer.invoke('message:exists', messageTypeId),
   deleteMessageFile: (messageTypeId) => ipcRenderer.invoke('message:delete', messageTypeId),
+  
+  // Message dump APIs
+  getDumpDirectory: () => ipcRenderer.invoke('dump:getDirectory'),
+  saveDumpDirectory: (directory) => ipcRenderer.invoke('dump:saveDirectory', directory),
+  selectDumpDirectory: () => ipcRenderer.invoke('dump:selectDirectory'),
+  searchMessageDump: (args) => ipcRenderer.invoke('dump:searchMessage', args),
 
   // Directory dialog and external message reading
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),

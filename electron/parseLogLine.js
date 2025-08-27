@@ -1,14 +1,16 @@
-// Enhanced log format regex patterns with better error handling
+// Enhanced log format regex patterns for both formats
 const LOG_PATTERNS = {
-  mainLog:
-    /^\[(\d{2}:\d{2}:\d{2}\.\d{3})\|([^|]+)\|(\d+)\]\s+\[([^\]]+)\]\s+(\d+),\s*(\d+)\[([<=>\s]+)\]\s+([A-Z]+)\s+(\d+),\s*(\d+)\s+\[([^\]]+)\]\s+([A-Z]+)\s+(\d+)\s+(.+)$/,
+  // Format 1: [05:02:28.259|ECCB|1] [0x02000000]    1, 2[<=]   RRC     1,    1 [0xdb10: UNKNOWN:T:0x0000:E:0:TH04] II 187 msgSTDRrcRRCConnectionRequestUeEccb
+  format1: /^\[(\d{2}:\d{2}:\d{2}\.\d{3})\|([^|]+)\|(\d+)\]\s+\[([^\]]+)\]\s+(\d+),\s*(\d+)\[([<=>\s]+)\]\s+([A-Z]+)\s+(\d+),\s*(\d+)\s+\[([^\]]+)\]\s+([A-Z]+)\s+(\d+)\s+(.+)$/,
+  
+  // Format 2: [ECCB L2 05:02:28.259]    1, 2[<=]   RRC     1,    1 [0xdb10: UNKNOWN:T:0x0000:E:0:TH04] II 187 msgSTDRrcRRCConnectionRequestUeEccb
+  format2: /^\[([^L]+)\s+L2\s+(\d{2}:\d{2}:\d{2}\.\d{3})\]\s+(\d+),\s*(\d+)\[([<=>\s]+)\]\s+([A-Z]+)\s+(\d+),\s*(\d+)\s+\[([^\]]+)\]\s+([A-Z]+)\s+(\d+)\s+(.+)$/,
+  
+  // Fallback patterns for partial parsing
   simpleLog: /^(\d+)_(Rx|Tx)_(.+)$/,
   timestampOnly: /^\[(\d{2}:\d{2}:\d{2}\.\d{3})\|([^|]+)\|(\d+)\]/,
   messageOnly: /(\d+)\s+(msg\w+)/,
 };
-
-// Track previous protocol for chaining
-let lastProtocol = 'UE';
 
 function cleanMessageName(messageName) {
   return messageName
@@ -37,9 +39,9 @@ function determineStatus(messageName, additionalData) {
   return "info";
 }
 
-  function extractProtocolFromMessage(messageName) {
+function extractProtocolFromMessage(messageName) {
   const lower = messageName.toLowerCase();
-  if (lower.includes("rrc")) return "RRC";
+  if (lower.includes("rrc")) return "UE"; // Replace RRC with UE
   if (lower.includes("mac")) return "MAC";
   if (lower.includes("pdcp")) return "PDCP";
   if (lower.includes("s1ap")) return "S1AP";
@@ -48,21 +50,19 @@ function determineStatus(messageName, additionalData) {
 }
 
 function isDebugPrintLine(line) {
-  // Consider a line a debug print if it contains 'DEBUG:' (case-insensitive)
   return /\bDEBUG:/i.test(line);
 }
 
 function extractTimestamp(line) {
-  // Try to extract [HH:MM:SS.mmm|...|...] at the start
   const match = line.match(/^\[(\d{2}:\d{2}:\d{2}\.\d{3})\|/);
   return match ? match[1] : "";
 }
 
-  function parseLogLine(line, lineNumber) {
+function parseLogLine(line, lineNumber) {
   const trimmedLine = line.trim();
   if (!trimmedLine) return { entry: null, error: null };
 
-  // ABSOLUTE: Always treat lines with DEBUG: as debug prints, no matter what
+  // Handle debug prints
   if (/\bDEBUG:/i.test(trimmedLine)) {
     return {
       entry: {
@@ -78,232 +78,159 @@ function extractTimestamp(line) {
   }
 
   try {
-    const mainMatch = trimmedLine.match(LOG_PATTERNS.mainLog);
-    if (mainMatch) {
+    // Try Format 1 first
+    const format1Match = trimmedLine.match(LOG_PATTERNS.format1);
+    if (format1Match) {
       const [
         ,
         timestamp,
-        system,
-        systemId,
+        referenceBlock,
+        logLevel,
         hexValue,
-        param1,
-        param2,
-        direction,
-        protocol,
         callId,
         cellId,
+        direction,
+        protocol,
+        callId2,
+        l2CallId,
         additionalData,
-        msgType,
-        messageId,
-        messageName,
-      ] = mainMatch;
-      lastProtocol = protocol; // update for chain
-      // Map protocol names to the correct entity names based on specifications
-      const mapProtocolToEntity = (protocol) => {
-        const upperProtocol = protocol.toUpperCase();
-        switch (upperProtocol) {
-          case "RRC":
-            return "BE"; // RRC → BE
-          case "S1AP":
-            return "MME"; // S1AP → MME
-          case "X2AP":
-          case "S2AP":
-            return "ENB2"; // X2AP/S2AP → ENB2
-          case "PDCP":
-          case "PDCB":
-            return "PDCP"; // PDCB → PDCP
-          case "GTP":
-          case "GTPB":
-            return "GTPB";
-          case "RLC":
-          case "RLCB":
-            return "RLCB";
-          case "MAC":
-          case "MACB":
-            return "MACB";
-          default:
-            return upperProtocol; // Keep normalized protocol if no mapping
-        }
-      };
+        state,
+        msgNum,
+        msgName,
+      ] = format1Match;
+
+      // Replace RRC with UE
+      const mappedProtocol = protocol === "RRC" ? "UE" : protocol;
       
-      const mappedProtocol = mapProtocolToEntity(protocol);
-      
-      // Handle direction with ECCB as central entity
-      let directionStr;
-      if (direction.includes("<=")) {
-        // <= means message coming TO ECCB
-        directionStr = `${mappedProtocol} → ECCB`;
-      } else if (direction.includes("=>")) {
-        // => means message going FROM ECCB
-        directionStr = `ECCB → ${mappedProtocol}`;
-      } else {
-        directionStr = direction.trim();
-      }
-      
-      // Extract message number from the message name (e.g., "187" from "msgSTDRrcRRCConnectionRequestUeEccb")
-      let messageNumber = null;
-      const messageNumberMatch = messageName.match(/\b(\d+)\b/);
-      if (messageNumberMatch) {
-        messageNumber = messageNumberMatch[1];
-      }
-      // Display requirement: Only print message type ID
-      const displayMessage = messageId || messageNumber || "";
-      
+      // Parse the additional data field [0xdb10: UNKNOWN:T:0x0000:E:0:TH04]
+      const additionalDataMatch = additionalData.match(/^([^:]+):\s*(.+)$/);
+      const msgHexValue = additionalDataMatch ? additionalDataMatch[1] : "";
+      const unknownField = additionalDataMatch ? additionalDataMatch[2] : additionalData;
+
       return {
         entry: {
-          id: `${lineNumber}-${messageId}`,
+          id: `${lineNumber}-${msgNum}`,
           timestamp: timestamp,
-          callId: `CALL-${callId}`,
-          cellId: `CELL-${cellId}`,
-          msgType: mappedProtocol,
-          direction: directionStr,
-          status: determineStatus(messageName, additionalData),
-          message: displayMessage,
+          referenceBlock: referenceBlock,
+          logLevel: logLevel,
+          callId: callId,
+          cellId: cellId,
+          direction: direction.trim(),
+          protocol: mappedProtocol,
+          l2CallId: l2CallId,
+          msgHexValue: msgHexValue,
+          unknownField: unknownField,
+          state: state,
+          msgNum: msgNum,
+          msgName: msgName,
+          status: determineStatus(msgName, unknownField),
+          message: msgName, // Show message name instead of number
           rawLine: trimmedLine,
           lineNumber,
-          messageId,
-          protocol: mappedProtocol,
+          // Legacy fields for compatibility
+          messageId: msgNum,
+          msgType: mappedProtocol,
           hexData: hexValue,
-          messageNumber: messageNumber,
-          originalMessageName: messageName,
-          messageName: cleanMessageName(messageName),
+          messageNumber: msgNum,
+          originalMessageName: msgName,
         },
         error: null,
       };
     }
+
+    // Try Format 2
+    const format2Match = trimmedLine.match(LOG_PATTERNS.format2);
+    if (format2Match) {
+      const [
+        ,
+        referenceBlock,
+        timestamp,
+        callId,
+        cellId,
+        direction,
+        protocol,
+        callId2,
+        l2CallId,
+        additionalData,
+        state,
+        msgNum,
+        msgName,
+      ] = format2Match;
+
+      // Replace RRC with UE
+      const mappedProtocol = protocol === "RRC" ? "UE" : protocol;
+      
+      // Parse the additional data field [0xdb10: UNKNOWN:T:0x0000:E:0:TH04]
+      const additionalDataMatch = additionalData.match(/^([^:]+):\s*(.+)$/);
+      const msgHexValue = additionalDataMatch ? additionalDataMatch[1] : "";
+      const unknownField = additionalDataMatch ? additionalDataMatch[2] : additionalData;
+
+      return {
+        entry: {
+          id: `${lineNumber}-${msgNum}`,
+          timestamp: timestamp,
+          referenceBlock: referenceBlock,
+          logLevel: "L2",
+          callId: callId,
+          cellId: cellId,
+          direction: direction.trim(),
+          protocol: mappedProtocol,
+          l2CallId: l2CallId,
+          msgHexValue: msgHexValue,
+          unknownField: unknownField,
+          state: state,
+          msgNum: msgNum,
+          msgName: msgName,
+          status: determineStatus(msgName, unknownField),
+          message: msgName, // Show message name instead of number
+          rawLine: trimmedLine,
+          lineNumber,
+          // Legacy fields for compatibility
+          messageId: msgNum,
+          msgType: mappedProtocol,
+          hexData: msgHexValue,
+          messageNumber: msgNum,
+          originalMessageName: msgName,
+        },
+        error: null,
+      };
+    }
+
+    // Handle simple log format as fallback
     const simpleMatch = trimmedLine.match(LOG_PATTERNS.simpleLog);
     if (simpleMatch) {
       const [, messageId, direction, messageName] = simpleMatch;
       const extractedProtocol = extractProtocolFromMessage(messageName);
       
-      // Map protocol names to the correct entity names based on specifications
-      const mapProtocolToEntity = (protocol) => {
-        const upperProtocol = protocol.toUpperCase();
-        switch (upperProtocol) {
-          case "RRC":
-            return "UE";
-          case "S1AP":
-            return "S1AP";
-          case "X2AP":
-            return "X2AP";
-          case "PDCP":
-            return "PDCP";
-          case "GTP":
-            return "GTPB";
-          case "RLC":
-            return "RLCB";
-          case "MAC":
-            return "MACB";
-          default:
-            return protocol; // Keep original if no mapping
-        }
-      };
-      
-      const mappedProtocol = mapProtocolToEntity(extractedProtocol);
-      lastProtocol = mappedProtocol;
-      
-      // Handle direction with ECCB as central entity
-      let directionStr;
-      if (direction === "Rx") {
-        // Rx means message received by ECCB
-        directionStr = `${mappedProtocol} → ECCB`;
-      } else {
-        // Tx means message transmitted by ECCB
-        directionStr = `ECCB → ${mappedProtocol}`;
-      }
-      
       return {
         entry: {
           id: `${lineNumber}-${messageId}`,
           timestamp: "",
-          msgType: mappedProtocol,
-          direction: directionStr,
+          referenceBlock: "UNKNOWN",
+          logLevel: "UNKNOWN",
+          callId: "UNKNOWN",
+          cellId: "UNKNOWN",
+          direction: direction === "Rx" ? "<=" : "=>",
+          protocol: extractedProtocol,
+          l2CallId: "UNKNOWN",
+          msgHexValue: "UNKNOWN",
+          unknownField: "UNKNOWN",
+          state: "UNKNOWN",
+          msgNum: messageId,
+          msgName: messageName,
           status: "info",
-          message: messageId, // Only the numeric message type ID as display text
+          message: messageName,
           rawLine: trimmedLine,
           lineNumber,
-          messageId,
+          // Legacy fields for compatibility
+          messageId: messageId,
+          msgType: extractedProtocol,
           originalMessageName: messageName,
-          messageName: cleanMessageName(messageName),
         },
         error: null,
       };
     }
-    // --- CHAINED PROTOCOL FLOW ---
-    // Restrict to ECCB-related protocols to keep view centered on ECCB entities
-    const protocolList = ["RRC", "MAC", "PDCP", "GTP", "RLC", "S1AP", "X2AP"];
-    const protoRegex = new RegExp(`\\b(${protocolList.join("|")})\\b`, "i");
-    const protoMatch = trimmedLine.match(protoRegex);
-    if (protoMatch) {
-      const msgType = protoMatch[1].toUpperCase();
-      // Map protocol names to the correct entity names based on specifications
-      const mapProtocolToEntity = (protocol) => {
-        const upperProtocol = protocol.toUpperCase();
-        switch (upperProtocol) {
-          case "RRC":
-            return "BE";
-          case "S1AP":
-            return "MME";
-          case "X2AP":
-          case "S2AP":
-            return "ENB2";
-          case "PDCP":
-          case "PDCB":
-            return "PDCP";
-          case "GTP":
-          case "GTPB":
-            return "GTPB";
-          case "RLC":
-          case "RLCB":
-            return "RLCB";
-          case "MAC":
-          case "MACB":
-            return "MACB";
-          default:
-            return upperProtocol; // Keep normalized if no mapping
-        }
-      };
-      
-      const mappedMsgType = mapProtocolToEntity(msgType);
-      const direction = `ECCB → ${mappedMsgType}`;
-      lastProtocol = mappedMsgType;
-      // Try to extract callId and cellId (look for 'CALL-<digits>' and 'CELL-<digits>' or similar patterns)
-      let callId = undefined;
-      let cellId = undefined;
-      const callIdMatch = trimmedLine.match(/CALL[-_ ]?(\d+)/i);
-      if (callIdMatch) callId = `CALL-${callIdMatch[1]}`;
-      else {
-        // Try to extract from comma-separated fields
-        const callNumMatch = trimmedLine.match(/\s(\d+),/);
-        if (callNumMatch) callId = `CALL-${callNumMatch[1]}`;
-      }
-      const cellIdMatch = trimmedLine.match(/CELL[-_ ]?([A-Za-z0-9]+)/i);
-      if (cellIdMatch) cellId = `CELL-${cellIdMatch[1]}`;
-      else {
-        // Try to extract from comma-separated fields
-        const cellNumMatch = trimmedLine.match(/,\s*(\d+)\s*\[/);
-        if (cellNumMatch) cellId = `CELL-${cellNumMatch[1]}`;
-      }
-      if (!callId) callId = 'UNKNOWN';
-      if (!cellId) cellId = 'UNKNOWN';
-      // Use only the cleaned message name when possible
-      const message = cleanMessageName(trimmedLine);
-      return {
-        entry: {
-          id: `${lineNumber}-fallback`,
-          timestamp: "",
-          callId,
-          cellId,
-          msgType: mappedMsgType,
-          direction,
-          status: "info",
-          message, // Fallback keeps original line
-          rawLine: trimmedLine,
-          lineNumber,
-        },
-        error: null,
-      };
-    }
+
     // Try to extract partial information for debugging
     const timestampMatch = trimmedLine.match(LOG_PATTERNS.timestampOnly);
     if (timestampMatch) {
@@ -312,6 +239,7 @@ function extractTimestamp(line) {
         error: `Partial timestamp found on line ${lineNumber}`,
       };
     }
+    
     const messageMatch = trimmedLine.match(LOG_PATTERNS.messageOnly);
     if (messageMatch) {
       return {
@@ -319,6 +247,7 @@ function extractTimestamp(line) {
         error: `Partial message found on line ${lineNumber}`,
       };
     }
+
     return {
       entry: null,
       error: `Unrecognized log format on line ${lineNumber}`,

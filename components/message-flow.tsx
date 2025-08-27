@@ -129,15 +129,16 @@ export function MessageFlow({ filters }: MessageFlowProps) {
       console.log("Filtered entries:", filteredEntries) // Debug log
 
       // Convert log entries to message flow format with proper entity mapping
+      // Only include lines successfully parsed by the main regex (not fallback-parsed lines)
       const flowMessages = filteredEntries
-        .filter((entry: any) => entry.direction && entry.msgType)
+        .filter((entry: any) => entry.direction && entry.msgType && entry.msgName && entry.referenceBlock)
         .map((entry: any, index: number) => {
           // Map protocol names to the correct entity names based on your specifications
           const mapProtocolToEntity = (protocol: string) => {
             const upperProtocol = protocol.toUpperCase();
             switch (upperProtocol) {
-              case "RRC":
-                return "BE"; // RRC → BE
+              case "UE":
+                return "UE"; // UE → UE (replaces RRC)
               case "S1AP":
                 return "MME"; // S1AP → MME
               case "X2AP":
@@ -185,12 +186,12 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             }
           } else if (entry.direction.includes("<=")) {
             // <= means message coming TO ECCB
-            from = mapProtocolToEntity(entry.msgType || "UE");
+            from = mapProtocolToEntity(entry.protocol || entry.msgType || "UE");
             to = "ECCB";
           } else if (entry.direction.includes("=>")) {
             // => means message going FROM ECCB
             from = "ECCB";
-            to = mapProtocolToEntity(entry.msgType || "UE");
+            to = mapProtocolToEntity(entry.protocol || entry.msgType || "UE");
           } else if (entry.direction === "Received") {
             from = mapProtocolToEntity(entry.msgType || "Network");
             to = "ECCB";
@@ -207,13 +208,17 @@ export function MessageFlow({ filters }: MessageFlowProps) {
             id: entry.lineNumber,
             from,
             to,
-            // Only show numeric message type ID
-            message: entry.message || entry.messageId,
+            // Show message name instead of message number
+            message: entry.msgName || entry.message,
             timestamp: entry.timestamp || `Line ${entry.lineNumber}`,
             status: entry.status,
-            messageId: entry.messageId,
+            messageId: entry.msgNum,
             callId: entry.callId,
             cellId: entry.cellId,
+            // Add new fields for message details
+            msgHexValue: entry.msgHexValue,
+            state: entry.state,
+            referenceBlock: entry.referenceBlock,
           }
         })
 
@@ -270,9 +275,59 @@ export function MessageFlow({ filters }: MessageFlowProps) {
       .trim()
   }
 
-  const handleMessageClick = (messageId: string) => {
-    // Redirect to log analysis page with the specific message ID
-    router.push(`/?selectedLog=${messageId}`)
+  const handleMessageClick = async (messageId: string) => {
+    try {
+      // Find the message details
+      const message = messages.find(m => m.id === messageId);
+      if (!message) return;
+
+      // Check if we have the required fields for message dump lookup
+      if (message.messageId && message.direction && message.message) {
+        const api = typeof window !== "undefined" ? (window as any).electronAPI : undefined;
+        if (api?.searchMessageDump) {
+          // Determine direction for file naming
+          const fileDirection = message.direction.includes("<=") ? "Rx" : "Tx";
+          
+          // Search for the dump file
+          const dumpFile = await api.searchMessageDump({
+            msgNum: message.messageId,
+            direction: fileDirection,
+            msgName: message.message,
+            dumpDirectory: "" // Will use default from config
+          });
+
+          if (dumpFile && dumpFile.found) {
+            toast({
+              title: "Message dump found",
+              description: `Found dump file: ${dumpFile.fileName}`,
+            });
+            
+            // Open the dump file in a new window or display it
+            // For now, redirect to log analysis with the message ID
+            router.push(`/?selectedLog=${messageId}`);
+          } else {
+            toast({
+              title: "Message dump not found",
+              description: `No dump file found for message ${message.messageId}`,
+              variant: "destructive",
+            });
+            
+            // Still redirect to log analysis for the message details
+            router.push(`/?selectedLog=${messageId}`);
+          }
+        } else {
+          // Fallback: redirect to log analysis page
+          router.push(`/?selectedLog=${messageId}`);
+        }
+      } else {
+        // Fallback: redirect to log analysis page
+        router.push(`/?selectedLog=${messageId}`);
+      }
+    } catch (error) {
+      console.error("Error handling message click:", error);
+      // Fallback: redirect to log analysis page
+      router.push(`/?selectedLog=${messageId}`);
+    }
   }
 
   console.log('Current highlightedMessage:', highlightedMessage);

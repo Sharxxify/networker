@@ -26,16 +26,24 @@ CREATE TABLE IF NOT EXISTS uploaded_files (
 );
 `;
 
-// Parsed log entries table
+// Parsed log entries table with enhanced fields
 const createLogEntriesTable = `
 CREATE TABLE IF NOT EXISTS log_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   file_id INTEGER,
   timestamp TEXT,
+  reference_block TEXT,
+  log_level TEXT,
   call_id TEXT,
   cell_id TEXT,
-  message_type TEXT,
   direction TEXT,
+  protocol TEXT,
+  l2_call_id TEXT,
+  msg_hex_value TEXT,
+  unknown_field TEXT,
+  state TEXT,
+  msg_num TEXT,
+  msg_name TEXT,
   status TEXT,
   message TEXT,
   raw_line TEXT,

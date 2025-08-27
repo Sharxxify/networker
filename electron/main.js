@@ -242,16 +242,24 @@ ipcMain.handle('db:parseFile', async (event, { fileId, filePath }) => {
   });
   // Debug: print all parsed entries before inserting
   console.log('Parsed entries:', parsedEntries);
-  const insertStmt = db.prepare(`INSERT INTO log_entries (file_id, timestamp, call_id, cell_id, message_type, direction, status, message, raw_line, line_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  const insertStmt = db.prepare(`INSERT INTO log_entries (file_id, timestamp, reference_block, log_level, call_id, cell_id, direction, protocol, l2_call_id, msg_hex_value, unknown_field, state, msg_num, msg_name, status, message, raw_line, line_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   const insertMany = db.transaction((entries) => {
     for (const entry of entries) {
       insertStmt.run(
         fileId,
         entry.timestamp,
+        entry.referenceBlock,
+        entry.logLevel,
         entry.callId,
         entry.cellId,
-        entry.msgType,
         entry.direction,
+        entry.protocol,
+        entry.l2CallId,
+        entry.msgHexValue,
+        entry.unknownField,
+        entry.state,
+        entry.msgNum,
+        entry.msgName,
         entry.status,
         entry.message,
         entry.rawLine,
@@ -284,19 +292,34 @@ ipcMain.handle('db:getLogEntries', (event, { fileId }) => {
   // Map snake_case to camelCase for frontend compatibility
   return entries.map((e) => ({
     ...e,
+    referenceBlock: e.reference_block,
+    logLevel: e.log_level,
     callId: e.call_id,
     cellId: e.cell_id,
-    msgType: e.message_type,
+    direction: e.direction,
+    protocol: e.protocol,
+    l2CallId: e.l2_call_id,
+    msgHexValue: e.msg_hex_value,
+    unknownField: e.unknown_field,
+    state: e.state,
+    msgNum: e.msg_num,
+    msgName: e.msg_name,
     lineNumber: e.line_number,
     rawLine: e.raw_line,
     createdAt: e.created_at,
-    // Preserve stored message (numeric ID) and pass originalMessageName if available
-    message: e.message,
-    originalMessageName: e.original_message_name,
+    // Legacy compatibility - map protocol to msgType
+    msgType: e.protocol,
+    // Preserve stored message (message name) and pass originalMessageName if available
+    message: e.msgName || e.message,
+    originalMessageName: e.msg_name,
     // Remove snake_case fields to avoid confusion
+    reference_block: undefined,
+    log_level: undefined,
     call_id: undefined,
     cell_id: undefined,
-    message_type: undefined,
+    l2_call_id: undefined,
+    msg_hex_value: undefined,
+    unknown_field: undefined,
     line_number: undefined,
     raw_line: undefined,
     created_at: undefined,
@@ -482,6 +505,80 @@ ipcMain.handle('message:delete', async (event, messageTypeId) => {
     return messageFileManager.deleteMessageFile(String(messageTypeId));
   } catch {
     return false;
+  }
+});
+
+// Message dump directory management
+ipcMain.handle('dump:getDirectory', async () => {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'dump-config.json');
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      return config.dumpDirectory || '';
+    }
+    return '';
+  } catch (error) {
+    console.error('Failed to get dump directory:', error);
+    return '';
+  }
+});
+
+ipcMain.handle('dump:saveDirectory', async (event, directory) => {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'dump-config.json');
+    const config = { dumpDirectory: directory };
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Failed to save dump directory:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('dump:selectDirectory', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: 'Select Message Dump Directory'
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to select dump directory:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('dump:searchMessage', async (event, { msgNum, direction, msgName, dumpDirectory }) => {
+  try {
+    if (!dumpDirectory || !fs.existsSync(dumpDirectory)) {
+      return { found: false, error: 'Dump directory not found' };
+    }
+
+    // Search for files matching the pattern: MsgNum_Direction_msgName
+    const files = fs.readdirSync(dumpDirectory);
+    const searchPattern = new RegExp(`^${msgNum}_${direction}_.*`, 'i');
+    
+    for (const file of files) {
+      if (searchPattern.test(file)) {
+        const filePath = path.join(dumpDirectory, file);
+        const stats = fs.statSync(filePath);
+        return {
+          found: true,
+          fileName: file,
+          filePath: filePath,
+          fileSize: stats.size,
+          lastModified: stats.mtime
+        };
+      }
+    }
+
+    return { found: false, error: 'No matching dump file found' };
+  } catch (error) {
+    console.error('Failed to search message dump:', error);
+    return { found: false, error: error.message };
   }
 });
 
