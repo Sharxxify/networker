@@ -56,4 +56,34 @@ CREATE TABLE IF NOT EXISTS log_entries (
 db.exec(createFilesTable);
 db.exec(createLogEntriesTable);
 
+// Ensure new columns exist on existing installations (lightweight migration)
+try {
+	const existingCols = new Set(
+		db.prepare("PRAGMA table_info(log_entries)").all().map((c) => c.name)
+	);
+
+	/**
+	 * Adds a column if it does not already exist.
+	 * Uses TEXT by default unless a specific type is provided.
+	 */
+	function addColumnIfMissing(columnName, type = 'TEXT') {
+		if (!existingCols.has(columnName)) {
+			db.prepare(`ALTER TABLE log_entries ADD COLUMN ${columnName} ${type}`).run();
+			existingCols.add(columnName);
+		}
+	}
+
+	addColumnIfMissing('reference_block');
+	addColumnIfMissing('log_level');
+	addColumnIfMissing('protocol');
+	addColumnIfMissing('l2_call_id');
+	addColumnIfMissing('msg_hex_value');
+	addColumnIfMissing('unknown_field');
+	addColumnIfMissing('state');
+	addColumnIfMissing('msg_num');
+	addColumnIfMissing('msg_name');
+} catch (err) {
+	// If migration fails, we keep running with existing schema; caller may recreate DB if needed
+}
+
 module.exports = db; 
