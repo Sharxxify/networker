@@ -51,7 +51,7 @@ function createWindow() {
   // Load the upload logs page by default
   mainWindow.loadURL(
     isDev
-      ? 'http://localhost:3001/upload'
+      ? 'http://localhost:3000/upload'
       : `file://${path.join(__dirname, '../out/upload/index.html')}`
   );
 
