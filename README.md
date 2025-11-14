@@ -110,6 +110,24 @@ npx electron --version
 npm run electron-dev
 ```
 
+#### 4. Sample Ubuntu Workflow (tested on 22.04)
+
+```bash
+# Install and use the exact Node version
+nvm install 22.12.0
+nvm use 22.12.0
+
+# Install app dependencies
+npm install
+
+# Start Electron (this may surface sandbox errors before permissions are fixed)
+npm run electron-dev
+
+# Fix sandbox permissions (update the path if your repo lives elsewhere)
+sudo chown root:root /home/sharxxify/Desktop/Samsung/networker/node_modules/electron/dist/chrome-sandbox \
+  && sudo chmod 4755 /home/sharxxify/Desktop/Samsung/networker/node_modules/electron/dist/chrome-sandbox
+```
+
 #### Troubleshooting Linux Issues
 
 **Issue: "The SUID sandbox helper binary was found, but is not configured correctly"**
